@@ -17,8 +17,8 @@
   --bg-card: #111827;
   --bg-card-hover: #172033;
   --bg-sidebar: #0e1424;
-  --border-color: #1f2937;
-  --border-subtle: #2d3748;
+  --border-color: #1e293b;
+  --border-subtle: #293548;
   --border-focus: #f97316;
   
   --text-primary: #f9fafb;
@@ -32,7 +32,7 @@
   --radius-lg: 3px;
   
   --shadow-none: none;
-  --shadow-flat: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-flat: none;
   
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -152,76 +152,13 @@ body {
 }
 
 /* ==========================================================================
-   Analytics Metric Cards (KPI Bar - Flat & Simplistic)
-   ========================================================================== */
-.analytics-bar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.65rem;
-  padding: 0.75rem 1.25rem 0.35rem 1.25rem;
-}
-
-.kpi-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.9rem;
-  transition: border-color 0.15s ease;
-}
-
-.kpi-card:hover {
-  border-color: var(--border-subtle);
-}
-
-.kpi-title {
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.2rem;
-}
-
-.kpi-value {
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-}
-
-.kpi-sub {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.tag-badge {
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 0.1rem 0.35rem;
-  border-radius: var(--radius-sm);
-}
-.tag-badge.emerald { background: var(--theme-emerald-subtle); color: var(--theme-emerald); border: 1px solid rgba(16, 185, 129, 0.2); }
-.tag-badge.orange { background: var(--theme-primary-subtle); color: var(--theme-primary); border: 1px solid rgba(249, 115, 22, 0.2); }
-.tag-badge.blue { background: var(--theme-blue-subtle); color: var(--theme-blue); border: 1px solid rgba(59, 130, 246, 0.2); }
-
-/* ==========================================================================
-   Main Grid Layout
+   Main Grid Layout (Direct Focus on Map & Controls)
    ========================================================================== */
 .main-container {
   display: grid;
   grid-template-columns: 340px 1fr;
   gap: 0.75rem;
-  padding: 0.65rem 1.25rem 1.25rem 1.25rem;
+  padding: 0.95rem 1.25rem 1.25rem 1.25rem;
   flex: 1;
 }
 
@@ -542,11 +479,10 @@ body {
   border-radius: 50%;
   pointer-events: auto;
   cursor: pointer;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
   transition: transform 0.15s ease;
 }
 .density-dot-pin:hover {
-  transform: scale(1.4);
+  transform: scale(1.3);
 }
 
 /* Point Inspector Card */
@@ -672,9 +608,9 @@ body {
 .leaflet-popup-content-wrapper {
   background: #111827 !important;
   color: #f9fafb !important;
-  border: 1px solid var(--border-subtle) !important;
+  border: 1px solid #334155 !important;
   border-radius: var(--radius-sm) !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: none !important;
 }
 
 .leaflet-popup-tip {
@@ -684,15 +620,15 @@ body {
 /* Custom Simplistic Marker Styling (No Glowing Halos, Sharp & Clean) */
 .sim-box-badge {
   background: #0b0f19;
-  border: 1px solid var(--theme-primary);
-  color: var(--theme-primary);
+  border: 1px solid #475569;
+  color: #cbd5e1;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 2px 6px;
   border-radius: 2px;
   white-space: nowrap;
   letter-spacing: 0.02em;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: none !important;
 }
 
 .puskesmas-marker-pin {
@@ -702,8 +638,8 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 2px;
-  background: #2563eb;
-  border: 1px solid #ffffff;
+  background: #1d4ed8;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: white;
   font-weight: 700;
   font-size: 13px;
@@ -717,7 +653,7 @@ body {
   height: 28px;
   border-radius: 2px;
   background: var(--theme-primary);
-  border: 1.5px solid #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   color: white;
   font-size: 14px;
 }
