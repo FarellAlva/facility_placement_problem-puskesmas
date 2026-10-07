@@ -19,20 +19,15 @@
        ======================================================================== -->
   <header class="dash-header">
     <div class="dash-brand">
-      <div class="dash-logo-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19 10.5V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v4.5C3.34 11.18 2 13.06 2 15.22 2 18.41 4.59 21 7.78 21h8.44C19.41 21 22 18.41 22 15.22c0-2.16-1.34-4.04-3-4.72zM13 14v3h-2v-3H8v-2h3V9h2v3h3v2h-3z"/>
-        </svg>
-      </div>
       <div class="dash-brand-text">
-        <h1>Sistem Penempatan Puskesmas <span class="dash-badge">Kota Harapan Indah</span></h1>
-        <p>Model Optimasi Multi-Kriteria (GA, PSO, ACO) • OpenStreetMap Bekasi - Cakung</p>
+        <h1>Sistem Penempatan Puskesmas</h1>
+        <p>Model Optimasi Multi-Kriteria (GA, PSO, ACO) • OpenStreetMap Harapan Indah Bekasi</p>
       </div>
     </div>
 
     <div class="dash-header-actions">
       <div class="dash-scope-tag">
-        <span>📐 Area Studi: Kota Harapan Indah (2.4 × 1.6 km)</span>
+        <span>Area Studi: Kota Harapan Indah (2.4 × 1.6 km)</span>
       </div>
 
       <div class="status-pill">
@@ -231,26 +226,31 @@
       
       <!-- Interactive OpenStreetMap Card -->
       <div class="map-card">
-        <div class="map-toolbar">
+        <div class="map-header-bar">
           <div class="map-title-box">
-            <span id="activeMapTitle">🗺️ Peta Kota Harapan Indah Bekasi (2.4 × 1.6 km)</span>
+            <span id="activeMapTitle">Peta Kota Harapan Indah Bekasi (2.4 × 1.6 km)</span>
           </div>
-
-          <div class="layer-toggles">
-            <span class="toggle-chip active" id="togBoundary" onclick="toggleLayer('boundary')">📐 Kotak Area Simulasi</span>
-            <span class="toggle-chip active" id="togDensity" onclick="toggleLayer('density')">👥 Kepadatan Penduduk</span>
-            <span class="toggle-chip active" id="togFaskes" onclick="toggleLayer('faskes')">🏥 Faskes Eksisting</span>
-            <span class="toggle-chip active" id="togOptimal" onclick="toggleLayer('optimal')">⭐ Rekomendasi Optimal</span>
-            <span class="toggle-chip active" id="togRiver" onclick="toggleLayer('river')">🌊 Kanal BKT</span>
-            <span class="toggle-chip active" id="togLandmarks" onclick="toggleLayer('landmarks')">🏢 Landmark</span>
-            <span class="toggle-chip active" id="togParticles" onclick="toggleLayer('particles')">🧬 Partikel Algoritma</span>
-            <span class="toggle-chip active" id="togLines" onclick="toggleLayer('lines')">📏 Garis Jarak</span>
-          </div>
+          <span class="map-coord-tag">Koordinat Real-World (EPSG:4326)</span>
         </div>
 
         <!-- Embedded OpenStreetMap Leaflet Container -->
         <div class="map-embed-wrapper" id="canvasWrapper">
           <div id="osmMap"></div>
+        </div>
+
+        <!-- Layer Controls (Pindah ke Bawah Peta, Flat Tanpa Glowing Border) -->
+        <div class="map-layer-footer">
+          <span class="layer-footer-label">Layer:</span>
+          <div class="layer-toggles">
+            <button type="button" class="toggle-chip active" id="togBoundary" onclick="toggleLayer('boundary')">Kotak Area Simulasi</button>
+            <button type="button" class="toggle-chip active" id="togDensity" onclick="toggleLayer('density')">Kepadatan Penduduk</button>
+            <button type="button" class="toggle-chip active" id="togFaskes" onclick="toggleLayer('faskes')">Faskes Eksisting</button>
+            <button type="button" class="toggle-chip active" id="togOptimal" onclick="toggleLayer('optimal')">Rekomendasi Optimal</button>
+            <button type="button" class="toggle-chip active" id="togRiver" onclick="toggleLayer('river')">Kanal BKT</button>
+            <button type="button" class="toggle-chip active" id="togLandmarks" onclick="toggleLayer('landmarks')">Landmark</button>
+            <button type="button" class="toggle-chip active" id="togParticles" onclick="toggleLayer('particles')">Partikel Algoritma</button>
+            <button type="button" class="toggle-chip active" id="togLines" onclick="toggleLayer('lines')">Garis Jarak</button>
+          </div>
         </div>
       </div>
 

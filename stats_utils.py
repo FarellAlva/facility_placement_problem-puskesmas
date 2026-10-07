@@ -12,8 +12,11 @@ Fitur:
 """
 
 from typing import Dict, List, Tuple, Any, Optional
+import sys
 import warnings
 warnings.filterwarnings("ignore")
+sys.modules['bottleneck'] = None
+sys.modules['numexpr'] = None
 import numpy as np
 import pandas as pd
 from scipy import stats
