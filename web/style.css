@@ -652,6 +652,47 @@ body {
   box-shadow: none !important;
 }
 
+.road-legend-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-sm);
+}
+
+.road-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.road-line-sample {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 1px;
+}
+
+.road-line-sample.arteri {
+  background: #f97316;
+  height: 4px;
+}
+
+.road-line-sample.kolektor {
+  background: #38bdf8;
+  height: 3px;
+}
+
+.road-line-sample.lokal {
+  background: #10b981;
+  height: 2px;
+}
+
 /* OpenStreetMap Container (Flat, No Bulge) */
 .map-embed-wrapper {
   position: relative;

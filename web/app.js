@@ -32,6 +32,7 @@
     },
     layersVisibility: {
       boundary: true,
+      roads: true,
       density: true,
       faskes: true,
       optimal: true,
@@ -59,6 +60,7 @@
     canvasRenderer: null,
     mapLayers: {
       boundaryGroup: null,
+      roadsGroup: null,
       densityGroup: null,
       faskesGroup: null,
       optimalGroup: null,
@@ -92,6 +94,7 @@
   // Inspector
   const elInspCoords = document.getElementById('inspCoords');
   const elInspRoad = document.getElementById('inspRoad');
+  const elInspRoadClass = document.getElementById('inspRoadClass');
   const elInspRoadDist = document.getElementById('inspRoadDist');
   const elInspDistP1 = document.getElementById('inspDistP1');
   const elInspDistP2 = document.getElementById('inspDistP2');
@@ -239,6 +242,7 @@
 
     // Initialize Layer Groups
     state.mapLayers.boundaryGroup = L.layerGroup().addTo(state.leafletMap);
+    state.mapLayers.roadsGroup = L.layerGroup().addTo(state.leafletMap);
     state.mapLayers.densityGroup = L.layerGroup().addTo(state.leafletMap);
     state.mapLayers.riverGroup = L.layerGroup().addTo(state.leafletMap);
     state.mapLayers.faskesGroup = L.layerGroup().addTo(state.leafletMap);
@@ -400,8 +404,100 @@
       });
     }
 
-    // 5. Population Density Layer (Titik Kepadatan Penduduk)
+    // 5. Road Network Hierarchy Layer (Arteri, Kolektor, Lokal)
+    renderRoadsLayer();
+
+    // 6. Population Density Layer (Titik Kepadatan Penduduk)
     renderDensityLayer();
+  }
+
+  // Render Jaringan Jalan & Hierarki (Arteri, Kolektor, Lokal)
+  function renderRoadsLayer() {
+    state.mapLayers.roadsGroup.clearLayers();
+    if (!state.layersVisibility.roads) return;
+
+    if (!state.mapData.roads || state.mapData.roads.length === 0) return;
+
+    state.mapData.roads.forEach(road => {
+      const latlngs = road.points.map(pt => metersToLatLng(pt[0], pt[1]));
+
+      let strokeColor = '#10b981'; // Default lokal (emerald green)
+      let strokeWidth = 2.4;
+      let strokeOpacity = 0.82;
+      let badgeBg = '#064e3b';
+      let badgeFg = '#6ee7b7';
+      let badgeText = 'LOKAL';
+      let multiplier = 0.65;
+      let desc = 'Jalan lingkungan permukiman & klaster perumahan warga.';
+
+      if (road.class === 'arteri') {
+        strokeColor = '#f97316'; // Vibrant amber / orange
+        strokeWidth = 5.0;
+        strokeOpacity = 0.92;
+        badgeBg = '#7c2d12';
+        badgeFg = '#fdba74';
+        badgeText = 'ARTERI UTAMA';
+        multiplier = 1.0;
+        desc = 'Koridor utama evakuasi darurat & rujukan cepat ambulans ke RSUD.';
+      } else if (road.class === 'kolektor') {
+        strokeColor = '#38bdf8'; // Sky blue
+        strokeWidth = 3.6;
+        strokeOpacity = 0.88;
+        badgeBg = '#0c4a6e';
+        badgeFg = '#7dd3fc';
+        badgeText = 'KOLEKTOR';
+        multiplier = 0.85;
+        desc = 'Jalan penghubung antar-kawasan dengan sentra niaga & publik.';
+      }
+
+      const poly = L.polyline(latlngs, {
+        color: strokeColor,
+        weight: strokeWidth,
+        opacity: strokeOpacity,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+
+      // Quick hover tooltip
+      poly.bindTooltip(`
+        <div style="font-family:Inter,sans-serif; font-size:0.72rem; padding:1px 3px;">
+          <span style="color:${strokeColor}; font-weight:700;">[${badgeText}]</span> <b>${road.name}</b>
+        </div>
+      `, { sticky: true, opacity: 0.95 });
+
+      // Click popup with full details
+      poly.bindPopup(`
+        <div style="font-family:Inter,sans-serif; font-size:0.75rem; line-height:1.45; min-width:230px;">
+          <div style="font-size:0.82rem; font-weight:700; color:#f8fafc; margin-bottom:5px;">
+            ${road.name}
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+            <span style="background:${badgeBg}; color:${badgeFg}; font-size:0.62rem; font-weight:700; padding:2px 6px; border-radius:3px;">
+              ${badgeText}
+            </span>
+            <span style="color:#94a3b8; font-size:0.7rem;">Kualitas Akses: <b style="color:#38bdf8;">${(multiplier * 100).toFixed(0)}%</b></span>
+          </div>
+          <div style="color:#cbd5e1; font-size:0.7rem; margin-bottom:6px;">
+            ${desc}
+          </div>
+          <div style="background:#0b0f19; border:1px solid #1f2937; border-radius:3px; padding:6px 8px; font-size:0.68rem;">
+            <div style="color:#94a3b8; margin-bottom:2px;">Fungsi Penempatan Puskesmas:</div>
+            <div style="color:#f1f5f9;">• Koridor Toleransi: <b>≤ 50 meter</b></div>
+            <div style="color:#f1f5f9;">• Kelayakan Ambulans: <b style="color:${strokeColor};">${badgeText}</b></div>
+          </div>
+        </div>
+      `);
+
+      // Interactive mouseover hover highlight
+      poly.on('mouseover', () => {
+        poly.setStyle({ weight: strokeWidth + 2.5, opacity: 1.0 });
+      });
+      poly.on('mouseout', () => {
+        poly.setStyle({ weight: strokeWidth, opacity: strokeOpacity });
+      });
+
+      state.mapLayers.roadsGroup.addLayer(poly);
+    });
   }
 
   // Render Sebaran Titik Kepadatan Penduduk
@@ -1430,13 +1526,19 @@
     // Update Sidebar Panel
     elInspCoords.textContent = `(${px.toFixed(0)}, ${py.toFixed(0)}) m`;
 
-    if (res.roadInfo) {
-      elInspRoad.textContent = res.roadInfo.roadName;
-      elInspRoadDist.textContent = `${res.roadInfo.distance.toFixed(1)} m`;
-    } else {
-      const roadInfo = getNearestRoadInfo(px, py);
-      elInspRoad.textContent = roadInfo.roadName;
-      elInspRoadDist.textContent = `${roadInfo.distance.toFixed(1)} m`;
+    const rInfo = res.roadInfo || getNearestRoadInfo(px, py);
+    elInspRoad.textContent = rInfo.roadName;
+    elInspRoadDist.textContent = `${rInfo.distance.toFixed(1)} m`;
+
+    if (elInspRoadClass) {
+      const classMap = {
+        arteri: { text: 'Arteri Utama (100%)', color: '#f97316' },
+        kolektor: { text: 'Kolektor (85%)', color: '#38bdf8' },
+        lokal: { text: 'Lokal (65%)', color: '#10b981' }
+      };
+      const cData = classMap[rInfo.roadClass] || { text: rInfo.roadClass, color: '#94a3b8' };
+      elInspRoadClass.textContent = cData.text;
+      elInspRoadClass.style.color = cData.color;
     }
 
     if (res.distsToExisting && res.distsToExisting.length >= 2) {
@@ -1481,7 +1583,8 @@
       <div style="font-size:0.8rem; line-height:1.4;">
         <strong style="color:${res.isValid ? '#38bdf8' : '#fb7185'};">${res.isValid ? 'Titik Inspeksi Sah' : 'Titik Tidak Layak'}</strong><br>
         <span style="color:#cbd5e1;">Koordinat: (${px.toFixed(0)}, ${py.toFixed(0)}) m</span><br>
-        <span style="color:#94a3b8;">Jalan: ${res.roadInfo ? res.roadInfo.roadName : '-'} (${res.roadInfo ? res.roadInfo.distance.toFixed(0) : '-'}m)</span><br>
+        <span style="color:#94a3b8;">Jalan: ${rInfo.roadName}</span><br>
+        <span style="color:#38bdf8; font-size:0.75rem;">Kategori: <b style="text-transform:capitalize;">${rInfo.roadClass}</b> (Jarak: ${rInfo.distance.toFixed(0)}m)</span><br>
         <span style="color:#93c5fd;">Ke Pusk. Barat: ${distP1Text}</span><br>
         <span style="color:#6ee7b7;">Ke Pusk. Timur: ${distP2Text}</span><br>
         <b style="color:${res.isValid ? 'var(--theme-primary)' : '#f87171'};">Fitness: ${res.fitness.toFixed(4)}</b>
@@ -1764,6 +1867,7 @@
     
     const chipIdMap = {
       boundary: 'togBoundary',
+      roads: 'togRoads',
       density: 'togDensity',
       faskes: 'togFaskes',
       optimal: 'togOptimal',
@@ -1779,6 +1883,13 @@
     if (layerKey === 'boundary') {
       if (state.layersVisibility.boundary) state.leafletMap.addLayer(state.mapLayers.boundaryGroup);
       else state.leafletMap.removeLayer(state.mapLayers.boundaryGroup);
+    } else if (layerKey === 'roads') {
+      if (state.layersVisibility.roads) {
+        renderRoadsLayer();
+        state.leafletMap.addLayer(state.mapLayers.roadsGroup);
+      } else {
+        state.leafletMap.removeLayer(state.mapLayers.roadsGroup);
+      }
     } else if (layerKey === 'density') {
       if (state.layersVisibility.density) {
         renderDensityLayer();

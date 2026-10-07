@@ -205,6 +205,10 @@
             <span class="insp-val" id="inspRoad">-</span>
           </div>
           <div class="insp-row">
+            <span class="insp-label">Klasifikasi Jalan:</span>
+            <span class="insp-val" id="inspRoadClass">-</span>
+          </div>
+          <div class="insp-row">
             <span class="insp-label">Jarak ke Jalan:</span>
             <span class="insp-val" id="inspRoadDist">-</span>
           </div>
@@ -251,12 +255,18 @@
           <span class="layer-footer-label">Layer:</span>
           <div class="layer-toggles">
             <button type="button" class="toggle-chip active" id="togBoundary" onclick="toggleLayer('boundary')">Kotak Area Simulasi</button>
+            <button type="button" class="toggle-chip active" id="togRoads" onclick="toggleLayer('roads')">Hierarki Jalan</button>
             <button type="button" class="toggle-chip active" id="togDensity" onclick="toggleLayer('density')">Kepadatan Penduduk</button>
             <button type="button" class="toggle-chip active" id="togFaskes" onclick="toggleLayer('faskes')">Faskes Eksisting</button>
             <button type="button" class="toggle-chip active" id="togOptimal" onclick="toggleLayer('optimal')">Rekomendasi Optimal</button>
             <button type="button" class="toggle-chip active" id="togLandmarks" onclick="toggleLayer('landmarks')">Landmark</button>
             <button type="button" class="toggle-chip active" id="togParticles" onclick="toggleLayer('particles')">Partikel Algoritma</button>
             <button type="button" class="toggle-chip active" id="togLines" onclick="toggleLayer('lines')">Garis Jarak</button>
+          </div>
+          <div class="road-legend-bar" title="Hierarki Klasifikasi Jaringan Jalan">
+            <span class="road-legend-item"><span class="road-line-sample arteri"></span> Arteri (100%)</span>
+            <span class="road-legend-item"><span class="road-line-sample kolektor"></span> Kolektor (85%)</span>
+            <span class="road-legend-item"><span class="road-line-sample lokal"></span> Lokal (65%)</span>
           </div>
         </div>
       </div>
