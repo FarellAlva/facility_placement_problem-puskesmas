@@ -541,27 +541,22 @@
         });
 
         circle.bindPopup(`
-          <div style="font-size:0.75rem; line-height:1.4; min-width:185px;">
+          <div style="font-size:0.75rem; line-height:1.45; min-width:175px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <b style="color:${dotColor};">👥 Titik #${idx + 1}</b>
+              <b style="color:${dotColor};">👥 Titik Pemukiman #${idx + 1}</b>
               <span style="font-size:0.65rem; color:#94a3b8;">(${h.x.toFixed(0)}, ${h.y.toFixed(0)}) m</span>
             </div>
-            <div style="color:#cbd5e1; font-size:0.7rem; margin-bottom:6px;">
-              Kategori: <b>${dotCategory}</b>
+            <div style="margin-bottom:4px; font-size:0.7rem;">
+              <span style="color:#94a3b8;">Kategori:</span> <b style="color:${dotColor};">${dotCategory}</b>
             </div>
-            <div style="background:#0b0f19; border:1px solid #1f2937; border-radius:2px; padding:6px; margin:6px 0;">
-              <div style="display:flex; justify-content:space-between; font-size:0.68rem; margin-bottom:4px;">
+            <div style="background:#0b0f19; border:1px solid #1f2937; border-radius:3px; padding:6px 8px; margin-top:4px;">
+              <div style="display:flex; justify-content:space-between; font-size:0.7rem;">
                 <span style="color:#94a3b8;">Bobot Kepadatan:</span>
-                <b id="popVal_${idx}" style="color:var(--theme-primary); font-weight:700;">${w.toFixed(1)}</b>
+                <b style="color:#f8fafc;">${w.toFixed(1)} / 5.8</b>
               </div>
-              <input type="range" min="1.0" max="6.0" step="0.1" value="${w}" 
-                style="width:100%; height:4px; margin:2px 0;" 
-                oninput="document.getElementById('popVal_${idx}').textContent = parseFloat(this.value).toFixed(1);" 
-                id="popSlider_${idx}">
-            </div>
-            <div style="display:flex; gap:6px; margin-top:6px;">
-              <button style="flex:1; padding:4px 6px; font-size:0.7rem; background:#f97316; color:white; border:none; border-radius:2px; cursor:pointer;" onclick="updateHouseWeight(${idx}, parseFloat(document.getElementById('popSlider_${idx}').value))">💾 Simpan</button>
-              <button style="padding:4px 6px; font-size:0.7rem; background:#ef4444; color:white; border:none; border-radius:2px; cursor:pointer;" onclick="removeHousePoint(${idx})">🗑️ Hapus</button>
+              <div style="color:#64748b; font-size:0.65rem; margin-top:2px;">
+                Tingkat prioritas jangkauan faskes.
+              </div>
             </div>
           </div>
         `);

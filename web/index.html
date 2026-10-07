@@ -151,44 +151,6 @@
         </div>
       </div>
 
-      <!-- Panel 3: Population Density Curation (Kurasi Kepadatan Wilayah) -->
-      <div class="panel-card" id="curationPanelCard">
-        <div class="panel-title">
-          <span>Kurasi Kepadatan Penduduk</span>
-          <span class="badge" id="curationStatusBadge">7 Klaster Wilayah</span>
-        </div>
-        <p style="font-size:0.75rem; color:#9ca3af; margin-bottom:8px; line-height:1.4;">
-          Ubah bobot klaster atau klik titik penduduk di peta untuk menyesuaikan kepadatan:
-        </p>
-
-        <!-- Quick Interactive Tools -->
-        <div style="display:flex; gap:6px; margin-bottom:10px;">
-          <button class="btn-secondary" id="btnAddPointMode" style="flex:1; font-size:0.72rem; padding:5px 6px;" onclick="toggleAddPointMode()">
-            <span id="addPointIcon">+</span> <span id="addPointText">Tambah Titik di Peta</span>
-          </button>
-          <button class="btn-secondary" style="font-size:0.72rem; padding:5px 8px;" title="Unduh data kurasi sebagai file JSON" onclick="exportCurationJSON()">
-            Unduh
-          </button>
-          <button class="btn-secondary" style="font-size:0.72rem; padding:5px 8px;" title="Muat data kurasi dari file JSON" onclick="document.getElementById('importJsonInput').click()">
-            Unggah
-          </button>
-          <input type="file" id="importJsonInput" accept=".json" style="display:none;" onchange="importCurationJSON(event)">
-        </div>
-
-        <div class="curation-list" id="curationListContainer">
-          <!-- Dynamically populated from curated_zones in map_data.js -->
-        </div>
-
-        <div style="display:flex; gap:8px; margin-top:10px;">
-          <button class="btn-primary" style="flex:1; padding:7px 10px; font-size:0.78rem;" onclick="applyCurationChanges()">
-            Terapkan Kurasi
-          </button>
-          <button class="btn-secondary" style="padding:7px 10px; font-size:0.78rem;" onclick="resetCurationToDefault()">
-            Reset
-          </button>
-        </div>
-      </div>
-
       <!-- Panel 4: Spatial Point Inspector -->
       <div class="panel-card">
         <div class="panel-title">
@@ -263,10 +225,15 @@
             <button type="button" class="toggle-chip active" id="togParticles" onclick="toggleLayer('particles')">Partikel Algoritma</button>
             <button type="button" class="toggle-chip active" id="togLines" onclick="toggleLayer('lines')">Garis Jarak</button>
           </div>
-          <div class="road-legend-bar" title="Hierarki Klasifikasi Jaringan Jalan">
-            <span class="road-legend-item"><span class="road-line-sample arteri"></span> Arteri (100%)</span>
-            <span class="road-legend-item"><span class="road-line-sample kolektor"></span> Kolektor (85%)</span>
-            <span class="road-legend-item"><span class="road-line-sample lokal"></span> Lokal (65%)</span>
+          <div class="road-legend-bar" title="Legenda Hierarki Jalan & Kepadatan Penduduk">
+            <span class="road-legend-item"><span class="road-line-sample arteri"></span> Arteri</span>
+            <span class="road-legend-item"><span class="road-line-sample kolektor"></span> Kolektor</span>
+            <span class="road-legend-item"><span class="road-line-sample lokal"></span> Lokal</span>
+            <span style="color:#475569; margin: 0 3px;">|</span>
+            <span class="road-legend-item"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444; vertical-align:middle; margin-right:3px;"></span> Sangat Padat (&ge;5.0)</span>
+            <span class="road-legend-item"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#f97316; vertical-align:middle; margin-right:3px;"></span> Padat (4.0-4.9)</span>
+            <span class="road-legend-item"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#eab308; vertical-align:middle; margin-right:3px;"></span> Sedang (3.0-3.9)</span>
+            <span class="road-legend-item"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#38bdf8; vertical-align:middle; margin-right:3px;"></span> Rendah/Ruko (&lt;3.0)</span>
           </div>
         </div>
       </div>
