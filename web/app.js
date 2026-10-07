@@ -1767,7 +1767,6 @@
       density: 'togDensity',
       faskes: 'togFaskes',
       optimal: 'togOptimal',
-      river: 'togRiver',
       landmarks: 'togLandmarks',
       particles: 'togParticles',
       lines: 'togLines'
