@@ -30,6 +30,7 @@
     },
     layersVisibility: {
       boundary: true,
+      density: true,
       faskes: true,
       optimal: true,
       river: true,
@@ -56,6 +57,7 @@
     canvasRenderer: null,
     mapLayers: {
       boundaryGroup: null,
+      densityGroup: null,
       faskesGroup: null,
       optimalGroup: null,
       riverGroup: null,
@@ -128,6 +130,7 @@
   function init() {
     loadMapData();
     initLeafletMap();
+    initCurationUI();
     setupChartDPI();
 
     window.addEventListener('resize', () => {
@@ -154,8 +157,18 @@
         facilities: [],
         competitors: [],
         roads: [],
-        forbidden_zones: []
+        forbidden_zones: [],
+        curated_zones: []
       };
+    }
+
+    // Preserve baseline weight for mathematical calibration
+    if (state.mapData.houses) {
+      state.mapData.houses.forEach(h => {
+        if (h.base_weight === undefined) {
+          h.base_weight = h.weight;
+        }
+      });
     }
   }
 
@@ -208,6 +221,7 @@
 
     // Initialize Layer Groups
     state.mapLayers.boundaryGroup = L.layerGroup().addTo(state.leafletMap);
+    state.mapLayers.densityGroup = L.layerGroup().addTo(state.leafletMap);
     state.mapLayers.riverGroup = L.layerGroup().addTo(state.leafletMap);
     state.mapLayers.faskesGroup = L.layerGroup().addTo(state.leafletMap);
     state.mapLayers.landmarkGroup = L.layerGroup().addTo(state.leafletMap);
@@ -222,7 +236,7 @@
       inspectSpatialPoint(coords[0], coords[1], e.latlng);
     });
 
-    // Render Static Layers (Simulation Bounding Box, Rivers, Faskes, Landmarks)
+    // Render Static Layers (Simulation Bounding Box, Rivers, Faskes, Landmarks, Density)
     renderStaticMapLayers();
 
     // Auto-fit to the simulation bounding box
@@ -363,7 +377,200 @@
         state.mapLayers.landmarkGroup.addLayer(marker);
       });
     }
+
+    // 5. Population Density Layer (Titik Kepadatan Penduduk)
+    renderDensityLayer();
   }
+
+  // Render Sebaran Titik Kepadatan Penduduk
+  function renderDensityLayer() {
+    state.mapLayers.densityGroup.clearLayers();
+    if (!state.layersVisibility.density) return;
+
+    if (state.mapData.houses && state.mapData.houses.length > 0) {
+      state.mapData.houses.forEach((h, idx) => {
+        const latlng = metersToLatLng(h.x, h.y);
+        const w = h.weight || 3.0;
+
+        // Color coding based on density weight
+        let dotColor = '#38bdf8'; // Low
+        let dotCategory = 'Rendah / Ruko';
+        if (w >= 5.0) {
+          dotColor = '#ef4444'; // Very Dense
+          dotCategory = 'Sangat Padat (Perkampungan)';
+        } else if (w >= 4.0) {
+          dotColor = '#f97316'; // Dense
+          dotCategory = 'Padat (Perumahan Padat)';
+        } else if (w >= 3.0) {
+          dotColor = '#eab308'; // Medium
+          dotCategory = 'Sedang (Hunian Menengah)';
+        }
+
+        const circle = L.circleMarker(latlng, {
+          radius: Math.max(3, Math.min(6.5, 2.5 + w * 0.7)),
+          fillColor: dotColor,
+          fillOpacity: 0.65,
+          color: '#ffffff',
+          weight: 0.8,
+          renderer: state.canvasRenderer
+        });
+
+        circle.bindPopup(`
+          <div style="font-size:0.75rem; line-height:1.4;">
+            <b style="color:${dotColor};">👥 Titik Pemukiman #${idx + 1}</b><br>
+            <span>Kategori: <b>${dotCategory}</b></span><br>
+            <span>Bobot Kepadatan: <b>${w.toFixed(2)}</b> / 6.0</span><br>
+            <span style="color:#94a3b8;">Koordinat: (${h.x.toFixed(0)}, ${h.y.toFixed(0)}) m</span>
+          </div>
+        `);
+
+        state.mapLayers.densityGroup.addLayer(circle);
+      });
+    }
+  }
+
+  // Inisialisasi Panel Kurasi Kepadatan
+  function initCurationUI() {
+    const container = document.getElementById('curationListContainer');
+    if (!container) return;
+
+    const zones = state.mapData.curated_zones || [];
+    if (zones.length === 0) {
+      container.innerHTML = `<div style="font-size:0.75rem; color:#94a3b8;">Data kurasi zona belum dimuat.</div>`;
+      return;
+    }
+
+    let html = '';
+    zones.forEach(z => {
+      const w = z.current_weight !== undefined ? z.current_weight : z.default_weight;
+      
+      let badgeClass = 'low';
+      if (w >= 5.0) badgeClass = 'very-dense';
+      else if (w >= 4.0) badgeClass = 'dense';
+      else if (w >= 3.0) badgeClass = 'medium';
+
+      html += `
+        <div class="curation-item">
+          <div class="curation-header">
+            <span class="curation-name" title="${z.name}">${z.name}</span>
+            <div class="curation-badge-val">
+              <span class="curation-badge ${badgeClass}" id="curBadge_${z.id}">${z.category}</span>
+              <span class="curation-val-text" id="curVal_${z.id}">${w.toFixed(1)}</span>
+            </div>
+          </div>
+          <div class="curation-meta">
+            <span>Est. ${z.estimated_families.toLocaleString('id-ID')} KK</span>
+            <span style="color:#64748b;">${z.spread_radius}m radius</span>
+          </div>
+          <input type="range" class="custom-slider" id="curSlider_${z.id}" 
+            min="1.0" max="6.0" step="0.1" value="${w}"
+            oninput="onZoneSliderInput('${z.id}', this.value)">
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  window.onZoneSliderInput = function(zoneId, val) {
+    const numVal = parseFloat(val);
+    const valEl = document.getElementById(`curVal_${zoneId}`);
+    if (valEl) valEl.textContent = numVal.toFixed(1);
+
+    const badgeEl = document.getElementById(`curBadge_${zoneId}`);
+    if (badgeEl) {
+      let badgeClass = 'curation-badge low';
+      let catText = 'Rendah';
+      if (numVal >= 5.0) {
+        badgeClass = 'curation-badge very-dense';
+        catText = 'Sangat Padat';
+      } else if (numVal >= 4.0) {
+        badgeClass = 'curation-badge dense';
+        catText = 'Padat';
+      } else if (numVal >= 3.0) {
+        badgeClass = 'curation-badge medium';
+        catText = 'Sedang';
+      }
+      badgeEl.className = badgeClass;
+      badgeEl.textContent = catText;
+    }
+  };
+
+  window.applyCurationChanges = function() {
+    const zones = state.mapData.curated_zones || [];
+    zones.forEach(z => {
+      const sliderEl = document.getElementById(`curSlider_${z.id}`);
+      if (sliderEl) {
+        z.current_weight = parseFloat(sliderEl.value);
+      }
+    });
+
+    // Kalibrasi ulang bobot tiap rumah berdasarkan klaster zona terdekat
+    if (state.mapData.houses) {
+      state.mapData.houses.forEach(h => {
+        let closestZone = null;
+        let minDist = Infinity;
+        for (const z of zones) {
+          const dx = h.x - z.center_meter[0];
+          const dy = h.y - z.center_meter[1];
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDist) {
+            minDist = dist;
+            closestZone = z;
+          }
+        }
+        if (closestZone) {
+          const base = h.base_weight !== undefined ? h.base_weight : h.weight;
+          const ratio = closestZone.current_weight / (closestZone.default_weight || 4.0);
+          h.weight = Math.max(1.0, Math.min(7.0, base * ratio));
+        }
+      });
+    }
+
+    renderDensityLayer();
+    runOptimization();
+
+    // Flash status badge
+    const badge = document.getElementById('curationStatusBadge');
+    if (badge) {
+      badge.textContent = '✓ Diterapkan';
+      badge.style.color = '#10b981';
+      setTimeout(() => {
+        badge.textContent = '7 Klaster Wilayah';
+        badge.style.color = '';
+      }, 2500);
+    }
+  };
+
+  window.resetCurationToDefault = function() {
+    const zones = state.mapData.curated_zones || [];
+    zones.forEach(z => {
+      z.current_weight = z.default_weight;
+      const sliderEl = document.getElementById(`curSlider_${z.id}`);
+      if (sliderEl) sliderEl.value = z.default_weight;
+      onZoneSliderInput(z.id, z.default_weight);
+    });
+
+    // Reset base weight
+    if (state.mapData.houses) {
+      state.mapData.houses.forEach(h => {
+        if (h.base_weight !== undefined) {
+          h.weight = h.base_weight;
+        }
+      });
+    }
+
+    renderDensityLayer();
+    runOptimization();
+
+    const badge = document.getElementById('curationStatusBadge');
+    if (badge) {
+      badge.textContent = '↺ Default';
+      setTimeout(() => {
+        badge.textContent = '7 Klaster Wilayah';
+      }, 2000);
+    }
+  };
 
   function setupChartDPI() {
     const dpr = window.devicePixelRatio || 1;
@@ -1240,6 +1447,7 @@
     
     const chipIdMap = {
       boundary: 'togBoundary',
+      density: 'togDensity',
       faskes: 'togFaskes',
       optimal: 'togOptimal',
       river: 'togRiver',
@@ -1255,6 +1463,13 @@
     if (layerKey === 'boundary') {
       if (state.layersVisibility.boundary) state.leafletMap.addLayer(state.mapLayers.boundaryGroup);
       else state.leafletMap.removeLayer(state.mapLayers.boundaryGroup);
+    } else if (layerKey === 'density') {
+      if (state.layersVisibility.density) {
+        renderDensityLayer();
+        state.leafletMap.addLayer(state.mapLayers.densityGroup);
+      } else {
+        state.leafletMap.removeLayer(state.mapLayers.densityGroup);
+      }
     } else if (layerKey === 'river') {
       if (state.layersVisibility.river) state.leafletMap.addLayer(state.mapLayers.riverGroup);
       else state.leafletMap.removeLayer(state.mapLayers.riverGroup);

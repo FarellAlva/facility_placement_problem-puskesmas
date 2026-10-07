@@ -198,7 +198,29 @@
         </div>
       </div>
 
-      <!-- Panel 3: Spatial Point Inspector -->
+      <!-- Panel 3: Population Density Curation (Kurasi Kepadatan Wilayah) -->
+      <div class="panel-card" id="curationPanelCard">
+        <div class="panel-title">
+          <span>👥 Kurasi Kepadatan Penduduk</span>
+          <span class="badge" id="curationStatusBadge">7 Klaster Wilayah</span>
+        </div>
+        <p style="font-size:0.75rem; color:#9ca3af; margin-bottom:12px; line-height:1.4;">
+          Sesuaikan bobot kepadatan per zona berikut untuk merefleksikan jumlah KK/jiwa nyata di Harapan Indah:
+        </p>
+        <div class="curation-list" id="curationListContainer">
+          <!-- Dynamically populated from curated_zones in map_data.js -->
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn-primary" style="flex:1; padding:7px 10px; font-size:0.78rem;" onclick="applyCurationChanges()">
+            Terapkan Kurasi
+          </button>
+          <button class="btn-secondary" style="padding:7px 10px; font-size:0.78rem;" onclick="resetCurationToDefault()">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel 4: Spatial Point Inspector -->
       <div class="panel-card">
         <div class="panel-title">
           <span>🔍 Inspeksi Titik Spasial</span>
@@ -250,6 +272,7 @@
 
           <div class="layer-toggles">
             <span class="toggle-chip active" id="togBoundary" onclick="toggleLayer('boundary')">📐 Kotak Area Simulasi</span>
+            <span class="toggle-chip active" id="togDensity" onclick="toggleLayer('density')">👥 Kepadatan Penduduk</span>
             <span class="toggle-chip active" id="togFaskes" onclick="toggleLayer('faskes')">🏥 Faskes Eksisting</span>
             <span class="toggle-chip active" id="togOptimal" onclick="toggleLayer('optimal')">⭐ Rekomendasi Optimal</span>
             <span class="toggle-chip active" id="togRiver" onclick="toggleLayer('river')">🌊 Kanal BKT</span>

@@ -1,0 +1,93 @@
+[
+  {
+    "id": "zone_ujung_menteng",
+    "name": "Perkampungan Ujung Menteng (RW 01-03)",
+    "description": "Pemukiman padat perkampungan perkotaan sisi barat BKT (Jl. Satria Raya). Gang sempit dengan kepadatan hunian tinggi.",
+    "center_meter": [350.0, 900.0],
+    "gps_coords": [-6.1869, 106.9667],
+    "sample_count": 65,
+    "spread_radius": 220,
+    "default_weight": 5.5,
+    "current_weight": 5.5,
+    "category": "Sangat Padat",
+    "estimated_families": 2400
+  },
+  {
+    "id": "zone_irigasi_akasia",
+    "name": "Pemukiman Jl. Irigasi & Akasia",
+    "description": "Kawasan hunian warga di sisi barat laut BKT, dekat akses saluran irigasi sekunder.",
+    "center_meter": [450.0, 1250.0],
+    "gps_coords": [-6.1837, 106.9676],
+    "sample_count": 45,
+    "spread_radius": 200,
+    "default_weight": 4.5,
+    "current_weight": 4.5,
+    "category": "Padat",
+    "estimated_families": 1800
+  },
+  {
+    "id": "zone_thb_utara",
+    "name": "Perumahan Taman Harapan Baru (THB)",
+    "description": "Kompleks perumahan tapak padat terencana di sisi timur BKT bagian utara (Jl. Taman Harapan Baru).",
+    "center_meter": [1850.0, 1350.0],
+    "gps_coords": [-6.1828, 106.9802],
+    "sample_count": 40,
+    "spread_radius": 190,
+    "default_weight": 4.2,
+    "current_weight": 4.2,
+    "category": "Padat Menengah",
+    "estimated_families": 2200
+  },
+  {
+    "id": "zone_siliwangi_pejuang",
+    "name": "Perumahan Jl. Siliwangi & Pejuang",
+    "description": "Klaster hunian menengah di sekitar koridor Jl. Siliwangi ke arah Medan Satria.",
+    "center_meter": [1600.0, 850.0],
+    "gps_coords": [-6.1873, 106.9779],
+    "sample_count": 30,
+    "spread_radius": 170,
+    "default_weight": 3.8,
+    "current_weight": 3.8,
+    "category": "Sedang",
+    "estimated_families": 1400
+  },
+  {
+    "id": "zone_boulevard_victoria",
+    "name": "Klaster Victoria & Harapan Indah 1",
+    "description": "Klaster perumahan modern, townhouse, dan residensial teratur di sekitar koridor tengah Harapan Indah.",
+    "center_meter": [1950.0, 700.0],
+    "gps_coords": [-6.1887, 106.9811],
+    "sample_count": 25,
+    "spread_radius": 160,
+    "default_weight": 3.2,
+    "current_weight": 3.2,
+    "category": "Sedang",
+    "estimated_families": 1100
+  },
+  {
+    "id": "zone_sentra_niaga",
+    "name": "Sentra Niaga GrandLucky & COURTS",
+    "description": "Kawasan komersial ritel, supermarket, ruko bisnis, dan sentra kuliner sepanjang Jl. Boulevard.",
+    "center_meter": [1650.0, 1100.0],
+    "gps_coords": [-6.1851, 106.9784],
+    "sample_count": 12,
+    "spread_radius": 130,
+    "default_weight": 2.0,
+    "current_weight": 2.0,
+    "category": "Rendah (Komersial)",
+    "estimated_families": 400
+  },
+  {
+    "id": "zone_ujung_menteng_selatan",
+    "name": "Kawasan Industri & UP PKB Selatan",
+    "description": "Area pergudangan, fasilitas pengujian kendaraan bermotor (PKB), dan ruko sisi Jl. Raya Bekasi.",
+    "center_meter": [220.0, 500.0],
+    "gps_coords": [-6.1905, 106.9655],
+    "sample_count": 8,
+    "spread_radius": 120,
+    "default_weight": 1.5,
+    "current_weight": 1.5,
+    "category": "Sangat Rendah (Industri)",
+    "estimated_families": 150
+  }
+]
