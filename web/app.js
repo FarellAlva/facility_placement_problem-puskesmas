@@ -167,16 +167,22 @@
       };
     }
 
-    // Check user custom curation in localStorage
+    // Cache Management: Automatically purge legacy obsolete curation versions
+    const CURATION_STORAGE_KEY = 'puskesmas_harapan_indah_curation_v3';
     try {
-      const saved = localStorage.getItem('puskesmas_harapan_indah_curation');
+      localStorage.removeItem('puskesmas_harapan_indah_curation');
+      localStorage.removeItem('puskesmas_harapan_indah_curation_v1');
+      localStorage.removeItem('puskesmas_harapan_indah_curation_v2');
+
+      const saved = localStorage.getItem(CURATION_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.houses && Array.isArray(parsed.houses) && parsed.houses.length > 0) {
+        // Only restore if it matches version 3 and contains the full dataset
+        if (parsed.version === 3 && parsed.houses && Array.isArray(parsed.houses) && parsed.houses.length >= 500) {
           state.mapData.houses = parsed.houses;
-        }
-        if (parsed.curated_zones && Array.isArray(parsed.curated_zones) && parsed.curated_zones.length > 0) {
-          state.mapData.curated_zones = parsed.curated_zones;
+          if (parsed.curated_zones && Array.isArray(parsed.curated_zones)) {
+            state.mapData.curated_zones = parsed.curated_zones;
+          }
         }
       }
     } catch (e) {
@@ -678,13 +684,16 @@
     }
   };
 
+  const CURATION_STORAGE_KEY = 'puskesmas_harapan_indah_curation_v3';
+
   function saveCurationToLocalStorage() {
     try {
       const payload = {
+        version: 3,
         houses: state.mapData.houses,
         curated_zones: state.mapData.curated_zones
       };
-      localStorage.setItem('puskesmas_harapan_indah_curation', JSON.stringify(payload));
+      localStorage.setItem(CURATION_STORAGE_KEY, JSON.stringify(payload));
     } catch (e) {
       console.warn('Could not save to localStorage:', e);
     }
@@ -823,7 +832,10 @@
 
   window.resetCurationToDefault = function() {
     try {
+      localStorage.removeItem(CURATION_STORAGE_KEY);
       localStorage.removeItem('puskesmas_harapan_indah_curation');
+      localStorage.removeItem('puskesmas_harapan_indah_curation_v1');
+      localStorage.removeItem('puskesmas_harapan_indah_curation_v2');
     } catch (e) {}
 
     // Reload baseline preset
@@ -848,6 +860,14 @@
         badge.textContent = `${(state.mapData.curated_zones || []).length} Klaster Wilayah`;
       }, 2000);
     }
+  };
+
+  window.forceResetDataAndCache = function() {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    window.location.reload(true);
   };
 
   function setupChartDPI() {
