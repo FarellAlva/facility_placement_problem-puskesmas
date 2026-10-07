@@ -14,6 +14,7 @@
     mapData: null,
     activeAlgo: 'split_3', // 'split_3', 'ga', 'pso', 'aco'
     mode: 'max', // 'max' or 'min_valid'
+    facilityCount: 1, // 1, 2, or 3 facilities
     curationMode: 'normal', // 'normal' | 'addPoint'
     weights: {
       populasi: 0.35,
@@ -906,7 +907,7 @@
   }
 
   // ==========================================================================
-  // 4. Metaheuristic Algorithms (GA, PSO, ACO)
+  // 4. Metaheuristic Algorithms (GA, PSO, ACO) Supporting 1, 2, or 3 Facilities
   // ==========================================================================
   function generateCandidatePoint() {
     const W = BBOX.widthMeters;
@@ -926,17 +927,87 @@
     return [Math.random() * W, Math.random() * H];
   }
 
+  function generateCandidateIndividual(pCount) {
+    const ind = [];
+    for (let k = 0; k < pCount; k++) {
+      const pt = generateCandidatePoint();
+      ind.push(pt[0], pt[1]);
+    }
+    return ind;
+  }
+
+  function evaluateIndividual(ind) {
+    const pCount = state.facilityCount || 1;
+    let totalRaw = 0;
+    const points = [];
+    let worstReason = "";
+    let anyInvalid = false;
+    let worstPenalty = 0;
+
+    for (let k = 0; k < pCount; k++) {
+      const px = ind[2 * k];
+      const py = ind[2 * k + 1];
+      points.push([px, py]);
+      const ev = evaluatePoint(px, py);
+      if (!ev.isValid) {
+        anyInvalid = true;
+        worstPenalty = Math.min(worstPenalty, ev.fitness);
+        worstReason = ev.reason;
+      } else {
+        totalRaw += ev.rawScore;
+      }
+    }
+
+    if (anyInvalid) {
+      return {
+        fitness: worstPenalty,
+        isValid: false,
+        reason: worstReason,
+        points
+      };
+    }
+
+    const avgScore = totalRaw / pCount;
+    let cannibalPenalty = 0.0;
+
+    // Spacing / Cannibalization penalty if pCount > 1
+    if (pCount > 1) {
+      for (let i = 0; i < pCount; i++) {
+        for (let j = i + 1; j < pCount; j++) {
+          const d = Math.hypot(points[i][0] - points[j][0], points[i][1] - points[j][1]);
+          if (d < 450.0) {
+            const overlap = 1.0 - (d / 450.0);
+            cannibalPenalty += 0.50 * (overlap * overlap);
+          }
+        }
+      }
+    }
+
+    const netScore = Math.max(0, avgScore - cannibalPenalty);
+    const finalFitness = state.mode === 'max' ? netScore : (1.0 - netScore);
+
+    return {
+      fitness: finalFitness,
+      avgScore,
+      cannibalPenalty,
+      isValid: true,
+      points
+    };
+  }
+
   function runOptimization() {
     const W = BBOX.widthMeters;
     const H = BBOX.heightMeters;
     const popSize = 40;
     const maxGen = state.sim.totalFrames;
+    const pCount = state.facilityCount || 1;
+    const dim = 2 * pCount;
 
     // 1. Real-Coded Genetic Algorithm (GA)
     const t0 = performance.now();
     let gaPop = [];
     for (let i = 0; i < popSize; i++) {
-      gaPop.push(i === 0 ? [1480.0, 640.0] : generateCandidatePoint());
+      gaPop.push(generateCandidateIndividual(pCount));
     }
 
     state.sim.gaHistory = [];
@@ -946,7 +1017,7 @@
     for (let g = 0; g < maxGen; g++) {
       const popWithFit = gaPop.map(ind => ({
         pos: ind,
-        fit: evaluatePoint(ind[0], ind[1]).fitness
+        fit: evaluateIndividual(ind).fitness
       }));
 
       popWithFit.sort((a, b) => b.fit - a.fit);
@@ -967,13 +1038,13 @@
         const p1 = tournamentSelect(popWithFit, 3);
         const p2 = tournamentSelect(popWithFit, 3);
         const alpha = 0.5;
-        const child = [0, 0];
-        for (let d = 0; d < 2; d++) {
+        const child = new Array(dim);
+        for (let d = 0; d < dim; d++) {
           const cMin = Math.min(p1[d], p2[d]);
           const cMax = Math.max(p1[d], p2[d]);
           const range = cMax - cMin;
           child[d] = cMin - alpha * range + Math.random() * (range + 2 * alpha * range);
-          const bound = d === 0 ? W : H;
+          const bound = (d % 2 === 0) ? W : H;
           child[d] = Math.max(0, Math.min(bound, child[d]));
           if (Math.random() < 0.12) {
             child[d] += (Math.random() - 0.5) * bound * 0.08;
@@ -998,12 +1069,16 @@
     let psoGBestFit = -Infinity;
 
     for (let i = 0; i < popSize; i++) {
-      const pos = i === 0 ? [1480.0, 640.0] : generateCandidatePoint();
-      const vel = [(Math.random() - 0.5) * W * 0.04, (Math.random() - 0.5) * H * 0.04];
+      const pos = generateCandidateIndividual(pCount);
+      const vel = [];
+      for (let d = 0; d < dim; d++) {
+        const bound = (d % 2 === 0) ? W : H;
+        vel.push((Math.random() - 0.5) * bound * 0.04);
+      }
       psoParticles.push(pos);
       psoVelocities.push(vel);
       pBestPos.push([...pos]);
-      const fit = evaluatePoint(pos[0], pos[1]).fitness;
+      const fit = evaluateIndividual(pos).fitness;
       pBestFit.push(fit);
       if (fit > psoGBestFit) {
         psoGBestFit = fit;
@@ -1017,18 +1092,18 @@
       const c1 = 1.494, c2 = 1.494;
 
       for (let i = 0; i < popSize; i++) {
-        for (let d = 0; d < 2; d++) {
+        for (let d = 0; d < dim; d++) {
           const r1 = Math.random(), r2 = Math.random();
           psoVelocities[i][d] = 
             wInertia * psoVelocities[i][d] +
             c1 * r1 * (pBestPos[i][d] - psoParticles[i][d]) +
             c2 * r2 * (psoGBestPos[d] - psoParticles[i][d]);
           
-          const vMax = (d === 0 ? W : H) * 0.10;
+          const bound = (d % 2 === 0) ? W : H;
+          const vMax = bound * 0.10;
           psoVelocities[i][d] = Math.max(-vMax, Math.min(vMax, psoVelocities[i][d]));
           psoParticles[i][d] += psoVelocities[i][d];
 
-          const bound = d === 0 ? W : H;
           if (psoParticles[i][d] < 0) {
             psoParticles[i][d] = -psoParticles[i][d];
             psoVelocities[i][d] = -psoVelocities[i][d];
@@ -1038,7 +1113,7 @@
           }
         }
 
-        const fit = evaluatePoint(psoParticles[i][0], psoParticles[i][1]).fitness;
+        const fit = evaluateIndividual(psoParticles[i]).fitness;
         if (fit > pBestFit[i]) {
           pBestFit[i] = fit;
           pBestPos[i] = [...psoParticles[i]];
@@ -1064,8 +1139,8 @@
     const t2 = performance.now();
     let archive = [];
     for (let i = 0; i < popSize; i++) {
-      const pos = i === 0 ? [1480.0, 640.0] : generateCandidatePoint();
-      archive.push({ pos, fit: evaluatePoint(pos[0], pos[1]).fitness });
+      const pos = generateCandidateIndividual(pCount);
+      archive.push({ pos, fit: evaluateIndividual(pos).fitness });
     }
     archive.sort((a, b) => b.fit - a.fit);
 
@@ -1096,8 +1171,8 @@
         }
 
         const centerPos = archive[selectedIdx].pos;
-        const antPos = [0, 0];
-        for (let d = 0; d < 2; d++) {
+        const antPos = new Array(dim);
+        for (let d = 0; d < dim; d++) {
           let sumDiff = 0;
           for (let e = 0; e < popSize; e++) {
             sumDiff += Math.abs(archive[e].pos[d] - centerPos[d]);
@@ -1107,11 +1182,11 @@
           const u2 = Math.random();
           const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
           antPos[d] = centerPos[d] + sigma * z;
-          const bound = d === 0 ? W : H;
+          const bound = (d % 2 === 0) ? W : H;
           antPos[d] = Math.max(0, Math.min(bound, antPos[d]));
         }
 
-        const fit = evaluatePoint(antPos[0], antPos[1]).fitness;
+        const fit = evaluateIndividual(antPos).fitness;
         newAnts.push({ pos: antPos, fit });
       }
 
@@ -1163,30 +1238,36 @@
     // 2. High-performance rendering of candidate particles
     if (state.layersVisibility.particles) {
       const renderPop = (pop, color, radius) => {
-        for (let i = 0; i < pop.length; i++) {
-          const pt = pop[i];
-          const latlng = metersToLatLng(pt[0], pt[1]);
-          const circle = L.circleMarker(latlng, {
-            radius: radius,
-            color: '#ffffff',
-            weight: 1.2,
-            fillColor: color,
-            fillOpacity: 0.85
-          });
-          state.mapLayers.particlesGroup.addLayer(circle);
+        const pCount = state.facilityCount || 1;
+        for (const ind of pop) {
+          for (let k = 0; k < pCount; k++) {
+            const px = ind[2 * k];
+            const py = ind[2 * k + 1];
+            if (px !== undefined && py !== undefined) {
+              const latlng = metersToLatLng(px, py);
+              const circle = L.circleMarker(latlng, {
+                radius: radius,
+                color: '#ffffff',
+                weight: 1.0,
+                fillColor: color,
+                fillOpacity: 0.80
+              });
+              state.mapLayers.particlesGroup.addLayer(circle);
+            }
+          }
         }
       };
 
       if (state.activeAlgo === 'split_3') {
-        renderPop(state.sim.gaHistory[frame].population, '#3b82f6', 4.0);
-        renderPop(state.sim.psoHistory[frame].population, '#f97316', 4.0);
-        renderPop(state.sim.acoHistory[frame].population, '#10b981', 4.0);
+        renderPop(state.sim.gaHistory[frame].population, '#3b82f6', 3.5);
+        renderPop(state.sim.psoHistory[frame].population, '#f97316', 3.5);
+        renderPop(state.sim.acoHistory[frame].population, '#10b981', 3.5);
       } else if (state.activeAlgo === 'ga') {
-        renderPop(state.sim.gaHistory[frame].population, '#3b82f6', 5.0);
+        renderPop(state.sim.gaHistory[frame].population, '#3b82f6', 4.5);
       } else if (state.activeAlgo === 'pso') {
-        renderPop(state.sim.psoHistory[frame].population, '#f97316', 5.0);
+        renderPop(state.sim.psoHistory[frame].population, '#f97316', 4.5);
       } else if (state.activeAlgo === 'aco') {
-        renderPop(state.sim.acoHistory[frame].population, '#10b981', 5.0);
+        renderPop(state.sim.acoHistory[frame].population, '#10b981', 4.5);
       }
     }
 
@@ -1216,76 +1297,118 @@
       }
     }
 
-    // 4. Render Best Solution Marker on OpenStreetMap (Flat Minimalist Badge)
+    // 4. Render Best Solution Markers on OpenStreetMap (Supporting 1, 2, or 3 Facilities)
+    const pCount = state.facilityCount || 1;
     if (state.layersVisibility.optimal && frameBest) {
-      const bestLatLng = metersToLatLng(frameBest[0], frameBest[1]);
-      
-      const pinIcon = L.divIcon({
-        className: 'custom-optimal-badge',
-        html: `<div class="optimal-marker-pin">⭐</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-        popupAnchor: [0, -16]
-      });
+      const bestCoords = [];
+      const bestLatLngs = [];
 
-      const bestMarker = L.marker(bestLatLng, { icon: pinIcon });
-      const roadInfo = getNearestRoadInfo(frameBest[0], frameBest[1]);
+      for (let k = 0; k < pCount; k++) {
+        const bx = frameBest[2 * k];
+        const by = frameBest[2 * k + 1];
+        if (bx === undefined || by === undefined) continue;
+        const bestLatLng = metersToLatLng(bx, by);
+        bestCoords.push([bx, by]);
+        bestLatLngs.push(bestLatLng);
 
-      let d1 = 1145, d2 = 1074;
-      if (state.mapData.competitors && state.mapData.competitors.length >= 2) {
-        const c1 = state.mapData.competitors[0];
-        const c2 = state.mapData.competitors[1];
-        d1 = Math.round(Math.hypot(c1.x - frameBest[0], c1.y - frameBest[1]));
-        d2 = Math.round(Math.hypot(c2.x - frameBest[0], c2.y - frameBest[1]));
-      }
-
-      bestMarker.bindPopup(`
-        <div style="font-size:0.8rem; min-width:210px; line-height:1.4;">
-          <b style="color:var(--theme-primary); font-size:0.88rem;">⭐ Rekomendasi (${bestAlgoName})</b><br>
-          <span style="color:#f8fafc; font-weight:600;">${roadInfo.roadName}</span><br>
-          <div style="margin: 0.3rem 0; padding: 0.25rem 0.4rem; background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.25); border-radius:2px;">
-            <span style="color:#fb923c; font-weight:700;">Skor Fitness: ${frameBestFit.toFixed(4)}</span><br>
-            <small style="color:#94a3b8;">Koordinat: (${frameBest[0].toFixed(0)}, ${frameBest[1].toFixed(0)}) m</small><br>
-            <small style="color:#94a3b8;">GPS: [${bestLatLng[0].toFixed(5)}, ${bestLatLng[1].toFixed(5)}]</small>
-          </div>
-          <span style="color:#93c5fd;">Ke Pusk. Ujung Menteng: <b>${d1} m</b></span><br>
-          <span style="color:#6ee7b7;">Ke Pusk. Pejuang: <b>${d2} m</b></span><br>
-          <small style="color:#a7f3d0;">✓ Bebas Banjir BKT & Akses Ambulans Prima</small>
-        </div>
-      `);
-      state.mapLayers.optimalGroup.addLayer(bestMarker);
-
-      // 5. Render Dotted Distance Lines to Existing Puskesmas
-      if (state.layersVisibility.lines && state.mapData.competitors) {
-        state.mapData.competitors.forEach((comp, idx) => {
-          const compLatLng = metersToLatLng(comp.x, comp.y);
-          const distM = Math.round(Math.hypot(comp.x - frameBest[0], comp.y - frameBest[1]));
-          const isWest = idx === 0;
-
-          // Line
-          const line = L.polyline([bestLatLng, compLatLng], {
-            color: isWest ? '#3b82f6' : '#10b981',
-            weight: 1.5,
-            dashArray: '5, 5',
-            opacity: 0.80
-          });
-          state.mapLayers.linesGroup.addLayer(line);
-
-          // Midpoint distance label
-          const midLat = (bestLatLng[0] + compLatLng[0]) / 2;
-          const midLng = (bestLatLng[1] + compLatLng[1]) / 2;
-          const labelIcon = L.divIcon({
-            className: 'distance-label-container',
-            html: `<div class="distance-label-pin" style="border-color:${isWest ? '#3b82f6' : '#10b981'}; color:${isWest ? '#93c5fd' : '#a7f3d0'};">${distM.toLocaleString()} m</div>`,
-            iconSize: [55, 18],
-            iconAnchor: [27, 9]
-          });
-          state.mapLayers.linesGroup.addLayer(L.marker([midLat, midLng], { icon: labelIcon, interactive: false }));
+        const pinLabel = pCount === 1 ? '⭐' : `⭐ #${k + 1}`;
+        const pinIcon = L.divIcon({
+          className: 'custom-optimal-badge',
+          html: `<div class="optimal-marker-pin">${pinLabel}</div>`,
+          iconSize: [pCount === 1 ? 28 : 46, 28],
+          iconAnchor: [pCount === 1 ? 14 : 23, 14],
+          popupAnchor: [0, -16]
         });
+
+        const bestMarker = L.marker(bestLatLng, { icon: pinIcon });
+        const roadInfo = getNearestRoadInfo(bx, by);
+
+        let d1 = 1145, d2 = 1074;
+        if (state.mapData.competitors && state.mapData.competitors.length >= 2) {
+          const c1 = state.mapData.competitors[0];
+          const c2 = state.mapData.competitors[1];
+          d1 = Math.round(Math.hypot(c1.x - bx, c1.y - by));
+          d2 = Math.round(Math.hypot(c2.x - bx, c2.y - by));
+        }
+
+        const titleText = pCount === 1 
+          ? `⭐ Rekomendasi (${bestAlgoName})`
+          : `⭐ Puskesmas Baru #${k + 1} (${bestAlgoName})`;
+
+        bestMarker.bindPopup(`
+          <div style="font-size:0.8rem; min-width:210px; line-height:1.4;">
+            <b style="color:var(--theme-primary); font-size:0.88rem;">${titleText}</b><br>
+            <span style="color:#f8fafc; font-weight:600;">${roadInfo.roadName}</span><br>
+            <div style="margin: 0.3rem 0; padding: 0.25rem 0.4rem; background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.25); border-radius:2px;">
+              <span style="color:#fb923c; font-weight:700;">Skor Fitness: ${frameBestFit.toFixed(4)}</span><br>
+              <small style="color:#94a3b8;">Koordinat: (${bx.toFixed(0)}, ${by.toFixed(0)}) m</small><br>
+              <small style="color:#94a3b8;">GPS: [${bestLatLng[0].toFixed(5)}, ${bestLatLng[1].toFixed(5)}]</small>
+            </div>
+            <span style="color:#93c5fd;">Ke Pusk. Ujung Menteng: <b>${d1} m</b></span><br>
+            <span style="color:#6ee7b7;">Ke Pusk. Pejuang: <b>${d2} m</b></span><br>
+            <small style="color:#a7f3d0;">✓ Bebas Banjir BKT & Akses Ambulans Prima</small>
+          </div>
+        `);
+        state.mapLayers.optimalGroup.addLayer(bestMarker);
+
+        // 5. Render Dotted Distance Lines to Existing Puskesmas
+        if (state.layersVisibility.lines && state.mapData.competitors) {
+          state.mapData.competitors.forEach((comp, idx) => {
+            const compLatLng = metersToLatLng(comp.x, comp.y);
+            const distM = Math.round(Math.hypot(comp.x - bx, comp.y - by));
+            const isWest = idx === 0;
+
+            const line = L.polyline([bestLatLng, compLatLng], {
+              color: isWest ? '#3b82f6' : '#10b981',
+              weight: 1.2,
+              dashArray: '5, 5',
+              opacity: 0.70
+            });
+            state.mapLayers.linesGroup.addLayer(line);
+
+            const midLat = (bestLatLng[0] + compLatLng[0]) / 2;
+            const midLng = (bestLatLng[1] + compLatLng[1]) / 2;
+            const labelIcon = L.divIcon({
+              className: 'distance-label-container',
+              html: `<div class="distance-label-pin" style="border-color:${isWest ? '#3b82f6' : '#10b981'}; color:${isWest ? '#93c5fd' : '#a7f3d0'};">${distM.toLocaleString()} m</div>`,
+              iconSize: [55, 18],
+              iconAnchor: [27, 9]
+            });
+            state.mapLayers.linesGroup.addLayer(L.marker([midLat, midLng], { icon: labelIcon, interactive: false }));
+          });
+        }
       }
 
-      // Update Top KPI Bar dynamically with current frame best
-      updateKpisForPoint(frameBest, frameBestFit, roadInfo, d1, d2);
+      // If pCount > 1, render distance line between the newly placed Puskesmas
+      if (state.layersVisibility.lines && pCount > 1) {
+        for (let i = 0; i < pCount; i++) {
+          for (let j = i + 1; j < pCount; j++) {
+            const dBetween = Math.round(Math.hypot(bestCoords[i][0] - bestCoords[j][0], bestCoords[i][1] - bestCoords[j][1]));
+            const line = L.polyline([bestLatLngs[i], bestLatLngs[j]], {
+              color: '#f97316',
+              weight: 1.5,
+              dashArray: '4, 4',
+              opacity: 0.85
+            });
+            state.mapLayers.linesGroup.addLayer(line);
+
+            const midLat = (bestLatLngs[i][0] + bestLatLngs[j][0]) / 2;
+            const midLng = (bestLatLngs[i][1] + bestLatLngs[j][1]) / 2;
+            const labelIcon = L.divIcon({
+              className: 'distance-label-container',
+              html: `<div class="distance-label-pin" style="border-color:#f97316; color:#fdba74;">Jarak: ${dBetween.toLocaleString()} m</div>`,
+              iconSize: [85, 18],
+              iconAnchor: [42, 9]
+            });
+            state.mapLayers.linesGroup.addLayer(L.marker([midLat, midLng], { icon: labelIcon, interactive: false }));
+          }
+        }
+      }
+
+      if (bestCoords.length > 0) {
+        const roadInfo0 = getNearestRoadInfo(bestCoords[0][0], bestCoords[0][1]);
+        updateKpisForPoint(bestCoords[0], frameBestFit, roadInfo0, 0, 0);
+      }
     }
   }
 
@@ -1508,6 +1631,19 @@
       renderConvergenceChart();
     }, intervalMs);
   }
+
+  window.setFacilityCount = function(count) {
+    state.facilityCount = parseInt(count, 10) || 1;
+    [1, 2, 3].forEach(c => {
+      const btn = document.getElementById(`btnCount${c}`);
+      if (btn) btn.classList.toggle('active', c === state.facilityCount);
+    });
+    const tag = document.getElementById('facilityCountTag');
+    if (tag) {
+      tag.textContent = `${state.facilityCount} Unit`;
+    }
+    runOptimization();
+  };
 
   window.runOptimization = function() {
     runOptimization();

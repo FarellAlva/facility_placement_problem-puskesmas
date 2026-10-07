@@ -20,7 +20,7 @@
   <header class="dash-header">
     <div class="dash-brand">
       <div class="dash-brand-text">
-        <h1>Sistem Penempatan Puskesmas</h1>
+        <h1>Puskesmas Placement</h1>
         <p>Model Optimasi Multi-Kriteria (GA, PSO, ACO) • OpenStreetMap Harapan Indah Bekasi</p>
       </div>
     </div>
@@ -28,11 +28,6 @@
     <div class="dash-header-actions">
       <div class="dash-scope-tag">
         <span>Area Studi: Kota Harapan Indah (2.4 × 1.6 km)</span>
-      </div>
-
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span id="systemStatusText">Sistem Aktif</span>
       </div>
     </div>
   </header>
@@ -64,6 +59,19 @@
         <div class="mode-toggle">
           <button class="mode-btn active" id="btnModeMax" onclick="setMode('max')">Maksimasi (Terbaik)</button>
           <button class="mode-btn" id="btnModeMin" onclick="setMode('min_valid')">Minimasi (Terburuk)</button>
+        </div>
+
+        <!-- Pilihan Jumlah Penempatan Puskesmas -->
+        <div class="facility-count-box">
+          <div class="facility-count-label">
+            <span>Jumlah Puskesmas:</span>
+            <span class="count-tag" id="facilityCountTag">1 Unit</span>
+          </div>
+          <div class="count-tabs">
+            <button type="button" class="count-tab active" id="btnCount1" onclick="setFacilityCount(1)">1 Pcs</button>
+            <button type="button" class="count-tab" id="btnCount2" onclick="setFacilityCount(2)">2 Pcs</button>
+            <button type="button" class="count-tab" id="btnCount3" onclick="setFacilityCount(3)">3 Pcs</button>
+          </div>
         </div>
 
         <!-- Primary Action -->

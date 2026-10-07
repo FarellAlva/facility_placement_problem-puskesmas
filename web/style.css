@@ -244,6 +244,67 @@ body {
   border: 1px solid var(--border-color);
 }
 
+/* Facility Placement Count Selector */
+.facility-count-box {
+  margin-bottom: 0.75rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.55rem;
+}
+
+.facility-count-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.count-tag {
+  color: var(--theme-primary);
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.count-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+}
+
+.count-tab {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.2rem;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  outline: none;
+  box-shadow: none !important;
+}
+
+.count-tab:hover {
+  background: var(--bg-card-hover);
+  border-color: #334155;
+  color: var(--text-primary);
+}
+
+.count-tab.active {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  font-weight: 700;
+  box-shadow: none !important;
+}
+
 /* Primary Action Buttons (Flat, Zero Glow) */
 .btn-primary {
   width: 100%;
@@ -655,16 +716,19 @@ body {
 }
 
 .optimal-marker-pin {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  min-width: 28px;
   height: 28px;
+  padding: 0 5px;
   border-radius: 2px;
   background: var(--theme-primary);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   color: white;
-  font-size: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .landmark-marker-pin {
