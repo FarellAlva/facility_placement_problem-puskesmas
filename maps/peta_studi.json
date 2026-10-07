@@ -1,5 +1,5 @@
 {
-  "name": "Peta Wilayah Studi: Kecamatan Sukamaju Sejahtera (Penempatan Puskesmas)",
+  "name": "Peta Wilayah Studi: Desa Sukamaju (2.0 x 1.5 km)",
   "dimensions": {
     "width": 2000.0,
     "height": 1500.0
@@ -582,7 +582,7 @@
       "x": 280.0,
       "y": 780.0,
       "weight": 2.0,
-      "name": "Kantor Desa & Pusat Layanan BPJS"
+      "name": "Kantor Desa & Layanan BPJS"
     },
     {
       "type": "posyandu",

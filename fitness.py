@@ -154,15 +154,27 @@ class FitnessEvaluator:
                 fac_sum += base_w * np.sum(f_weights * np.exp(-d_sq / (2.0 * (self.sigma_fac ** 2))))
         s_fac = float(np.clip(fac_sum / self.max_fac_score, 0.0, 1.0))
 
-        # 6. Fitur Distribusi Faskes Eksisting (Pustu / Klinik)
+        # 6. Fitur Distribusi & Kedekatan Jaringan Faskes Eksisting (Puskesmas / Pustu)
         if len(self.map.competitors) > 0:
             d_comp_sq = np.sum((self.map.competitors - pt_2d) ** 2, axis=1)
-            d_comp_min = float(np.sqrt(np.min(d_comp_sq)))
-            ratio = d_comp_min / self.comp_d_opt
-            s_comp = (ratio ** 1.6) * np.exp(1.0 - (ratio ** 1.6))
-            # Penalti kanibalisasi / tumpang-tindih jika jarak terlalu rapat (< 200m)
-            if d_comp_min < 200.0:
-                s_comp *= (d_comp_min / 200.0) ** 1.8
+            d_comp_arr = np.sqrt(d_comp_sq)
+            d_comp_min = float(np.min(d_comp_arr))
+
+            # Skala jarak ideal jaringan faskes (buffer dari kanibalisasi dan keterjangkauan rujukan)
+            d_opt = self.comp_d_opt if self.comp_d_opt > 0 else 500.0
+            ratio = d_comp_min / d_opt
+            s_comp = (ratio ** 1.5) * np.exp(1.0 - (ratio ** 1.5))
+
+            # Penalti kanibalisasi jika jarak terlalu rapat (< 250 meter)
+            if d_comp_min < 250.0:
+                s_comp *= (d_comp_min / 250.0) ** 2.0
+
+            # Jika terdapat lebih dari 1 faskes eksisting (misal 2 puskesmas tersebar),
+            # perhitungkan faktor keseimbangan jaringan (mengisi celah layanan di antara kedua faskes)
+            if len(self.map.competitors) > 1:
+                balance_ratio = float(np.min(d_comp_arr) / (np.mean(d_comp_arr) + 1e-6))
+                s_comp = 0.70 * s_comp + 0.30 * float(np.clip(balance_ratio, 0.0, 1.0))
+
             s_comp = float(np.clip(s_comp, 0.0, 1.0))
         else:
             s_comp = 0.85

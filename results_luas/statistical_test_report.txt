@@ -1,0 +1,56 @@
+================================================================================
+LAPORAN UJI HIPOTESIS STATISTIK NON-PARAMETRIK: GA vs PSO vs ACO
+STUDI PENENTUAN LOKASI FASILITAS PUSKESMAS KECAMATAN SUKAMAJU SEJAHTERA
+================================================================================
+
+--- MODE MAKSIMASI (LOKASI TERBAIK PUSKESMAS) ---
+1. Uji Omnibus Kruskal-Wallis H-test:
+   - H-statistic : 60.1450
+   - p-value     : 8.70304e-14
+   - Signifikan  : True
+   - Kesimpulan  : Uji Kruskal-Wallis menunjukkan terdapat perbedaan yang SIGNIFIKAN secara global di antara algoritma GA, PSO, ACO pada Nilai Fitness (H = 60.1450, p-value = 8.70304e-14 < 0.05).
+
+2. Uji Post-hoc Pairwise Mann-Whitney U (Koreksi Bonferroni alpha = 0.05/3 = 0.0167):
+   * Pasangan [GA vs PSO]:
+     - U-statistic       : 783.00
+     - p-value           : 6.60897e-07
+     - Rank-Biserial r   : -0.740
+     - Interpretasi      : Perbedaan GA vs PSO SIGNIFIKAN setelah koreksi Bonferroni (U = 783.00, p-value = 6.60897e-07 < 0.0167). GA lebih unggul (Median GA=0.9235 vs PSO=0.9235, r=-0.740).
+   * Pasangan [GA vs ACO]:
+     - U-statistic       : 894.00
+     - p-value           : 3.30019e-11
+     - Rank-Biserial r   : -0.987
+     - Interpretasi      : Perbedaan GA vs ACO SIGNIFIKAN setelah koreksi Bonferroni (U = 894.00, p-value = 3.30019e-11 < 0.0167). GA lebih unggul (Median GA=0.9235 vs ACO=0.9235, r=-0.987).
+   * Pasangan [PSO vs ACO]:
+     - U-statistic       : 793.00
+     - p-value           : 4.11271e-07
+     - Rank-Biserial r   : -0.762
+     - Interpretasi      : Perbedaan PSO vs ACO SIGNIFIKAN setelah koreksi Bonferroni (U = 793.00, p-value = 4.11271e-07 < 0.0167). PSO lebih unggul (Median PSO=0.9235 vs ACO=0.9235, r=-0.762).
+
+================================================================================
+
+--- MODE MINIMASI VALID (LOKASI TERBURUK LEGAL) ---
+1. Uji Omnibus Kruskal-Wallis H-test:
+   - H-statistic : 7.9344
+   - p-value     : 1.89267e-02
+   - Signifikan  : True
+   - Kesimpulan  : Uji Kruskal-Wallis menunjukkan terdapat perbedaan yang SIGNIFIKAN secara global di antara algoritma GA, PSO, ACO pada Nilai Fitness (H = 7.9344, p-value = 1.89267e-02 < 0.05).
+
+2. Uji Post-hoc Pairwise Mann-Whitney U (Koreksi Bonferroni alpha = 0.05/3 = 0.0167):
+   * Pasangan [GA vs PSO]:
+     - U-statistic       : 354.00
+     - p-value           : 1.57976e-01
+     - Rank-Biserial r   : 0.213
+     - Interpretasi      : Perbedaan GA vs PSO TIDAK signifikan setelah koreksi Bonferroni (U = 354.00, p-value = 0.15798 >= 0.0167). Keduanya berkinerja setara (Median GA=0.7995 vs PSO=0.8013).
+   * Pasangan [GA vs ACO]:
+     - U-statistic       : 344.00
+     - p-value           : 1.18817e-01
+     - Rank-Biserial r   : 0.236
+     - Interpretasi      : Perbedaan GA vs ACO TIDAK signifikan setelah koreksi Bonferroni (U = 344.00, p-value = 0.11882 >= 0.0167). Keduanya berkinerja setara (Median GA=0.7995 vs ACO=0.8013).
+   * Pasangan [PSO vs ACO]:
+     - U-statistic       : 680.00
+     - p-value           : 6.91252e-04
+     - Rank-Biserial r   : -0.511
+     - Interpretasi      : Perbedaan PSO vs ACO SIGNIFIKAN setelah koreksi Bonferroni (U = 680.00, p-value = 6.91252e-04 < 0.0167). PSO lebih unggul (Median PSO=0.8013 vs ACO=0.8013, r=-0.511).
+
+================================================================================

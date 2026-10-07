@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Spasial Penempatan Puskesmas Kota Harapan Indah Bekasi | OpenStreetMap</title>
+  <meta name="description" content="Simulasi Spasial Penempatan Fasilitas Puskesmas Kota Harapan Indah Bekasi berbasis Algoritma Genetika (GA), Particle Swarm Optimization (PSO), dan Ant Colony Optimization (ACO) tertanam pada OpenStreetMap.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS for OpenStreetMap -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       Top Header Navbar
+       ======================================================================== -->
+  <header class="dash-header">
+    <div class="dash-brand">
+      <div class="dash-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 10.5V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v4.5C3.34 11.18 2 13.06 2 15.22 2 18.41 4.59 21 7.78 21h8.44C19.41 21 22 18.41 22 15.22c0-2.16-1.34-4.04-3-4.72zM13 14v3h-2v-3H8v-2h3V9h2v3h3v2h-3z"/>
+        </svg>
+      </div>
+      <div class="dash-brand-text">
+        <h1>Sistem Penempatan Puskesmas <span class="dash-badge">Kota Harapan Indah</span></h1>
+        <p>Intelligence Platform • Perbatasan Bekasi - Jakarta Timur (Kanal BKT)</p>
+      </div>
+    </div>
+
+    <div class="dash-header-actions">
+      <div class="map-preset-pills">
+        <button id="btnMapHarapan" class="preset-pill active" onclick="switchMapPreset('harapan_indah')">📍 Harapan Indah (OSM)</button>
+        <button id="btnMapStudi" class="preset-pill" onclick="switchMapPreset('peta_studi')">📍 Desa Sukamaju</button>
+        <button id="btnMapLuas" class="preset-pill" onclick="switchMapPreset('kecamatan_luas')">📍 Kecamatan Luas</button>
+      </div>
+
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="systemStatusText">Sistem Spasial Aktif</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Analytics Metric Cards (KPI Bar)
+       ======================================================================== -->
+  <section class="analytics-bar">
+    <div class="kpi-card">
+      <div class="kpi-title">
+        <span>Rekomendasi Tapak Baru</span>
+        <span class="tag-badge orange">Optimal</span>
+      </div>
+      <div class="kpi-value" id="kpiCoords">(1480, 640) <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">m</span></div>
+      <div class="kpi-sub" id="kpiRoadName">Jl. Siliwangi / GrandLucky Corridor</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">
+        <span>Skor Fitness Global</span>
+        <span class="tag-badge emerald" id="kpiFitnessDelta">+18.4% vs Base</span>
+      </div>
+      <div class="kpi-value" id="kpiFitness">0.9412</div>
+      <div class="kpi-sub" id="kpiFeasibility">100% Feasible (Bebas Banjir BKT)</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">
+        <span>Ke Puskesmas Ujung Menteng</span>
+        <span class="tag-badge blue">Faskes Barat</span>
+      </div>
+      <div class="kpi-value" id="kpiDistP1">1.145 <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span></div>
+      <div class="kpi-sub">Buffer Aman (&gt; 300m Bebas Kanibalisasi)</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">
+        <span>Ke Puskesmas Pejuang</span>
+        <span class="tag-badge emerald">Faskes Timur Laut</span>
+      </div>
+      <div class="kpi-value" id="kpiDistP2">1.074 <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span></div>
+      <div class="kpi-sub">Keseimbangan Jaringan Terpadu</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">
+        <span>Waktu Tanggap Ambulans</span>
+        <span class="tag-badge emerald">Grade A</span>
+      </div>
+      <div class="kpi-value" id="kpiResponseTime">3.4 <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">menit</span></div>
+      <div class="kpi-sub">98.6% Pasien Terjangkau Cepat</div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Main Application Container
+       ======================================================================== -->
+  <main class="main-container">
+
+    <!-- Left Sidebar: Controls & Inspector -->
+    <aside class="sidebar">
+      
+      <!-- Panel 1: Simulation Setup -->
+      <div class="panel-card">
+        <div class="panel-title">
+          <span>⚙️ Konfigurasi Algoritma</span>
+          <span class="badge" id="evalBudgetBadge">Budget: 2.000 Eval</span>
+        </div>
+
+        <!-- Algo Selector -->
+        <div class="algo-tabs">
+          <div class="algo-tab active" data-algo="split_3" onclick="selectAlgo('split_3')">Semua</div>
+          <div class="algo-tab" data-algo="ga" onclick="selectAlgo('ga')">GA</div>
+          <div class="algo-tab" data-algo="pso" onclick="selectAlgo('pso')">PSO</div>
+          <div class="algo-tab" data-algo="aco" onclick="selectAlgo('aco')">ACO</div>
+        </div>
+
+        <!-- Optimization Mode -->
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btnModeMax" onclick="setMode('max')">Maksimasi (Terbaik)</button>
+          <button class="mode-btn" id="btnModeMin" onclick="setMode('min_valid')">Minimasi (Terburuk)</button>
+        </div>
+
+        <!-- Primary Action -->
+        <button class="btn-primary" id="btnRunSim" onclick="runOptimization()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+          </svg>
+          Mulai Optimasi Real-Time
+        </button>
+
+        <!-- Playback Controls -->
+        <div class="playback-row">
+          <button class="btn-secondary" id="btnPlayPause" onclick="togglePlayback()">
+            <span id="playIcon">▶</span> <span id="playText">Putar</span>
+          </button>
+          <button class="btn-secondary" onclick="stepBackward()">⏮ Prev</button>
+          <button class="btn-secondary" onclick="stepForward()">Next ⏭</button>
+          <button class="btn-secondary" onclick="resetPlayback()">↺ Reset</button>
+        </div>
+
+        <!-- Progress Timeline -->
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Iterasi / Generasi:</span>
+            <span class="val" id="iterLabel">0 / 50</span>
+          </div>
+          <input type="range" class="custom-slider" id="scrubberSlider" min="0" max="50" value="0" oninput="onScrub(this.value)">
+        </div>
+
+        <!-- Speed Control -->
+        <div class="slider-group" style="margin-top: 0.6rem;">
+          <div class="slider-label">
+            <span>Kecepatan Animasi:</span>
+            <span class="val" id="speedLabel">35 FPS</span>
+          </div>
+          <input type="range" class="custom-slider" id="speedSlider" min="1" max="100" value="50" oninput="onSpeedChange(this.value)">
+        </div>
+      </div>
+
+      <!-- Panel 2: Multi-Criteria Weights -->
+      <div class="panel-card">
+        <div class="panel-title">
+          <span>⚖️ Bobot Kriteria Spasial</span>
+          <span class="badge">Total: 100%</span>
+        </div>
+
+        <div class="weight-item">
+          <div class="weight-header">
+            <span class="weight-name">Aksesibilitas Penduduk (w1)</span>
+            <span class="weight-percent" id="w1Val">35%</span>
+          </div>
+          <input type="range" class="custom-slider" id="sliderW1" min="0" max="100" value="35" oninput="onWeightChange()">
+        </div>
+
+        <div class="weight-item">
+          <div class="weight-header">
+            <span class="weight-name">Kualitas Jalan Ambulans (w2)</span>
+            <span class="weight-percent" id="w2Val">30%</span>
+          </div>
+          <input type="range" class="custom-slider" id="sliderW2" min="0" max="100" value="30" oninput="onWeightChange()">
+        </div>
+
+        <div class="weight-item">
+          <div class="weight-header">
+            <span class="weight-name">Sinergi Fasilitas Publik (w3)</span>
+            <span class="weight-percent" id="w3Val">20%</span>
+          </div>
+          <input type="range" class="custom-slider" id="sliderW3" min="0" max="100" value="20" oninput="onWeightChange()">
+        </div>
+
+        <div class="weight-item">
+          <div class="weight-header">
+            <span class="weight-name">Jarak Antar-Puskesmas (w4)</span>
+            <span class="weight-percent" id="w4Val">15%</span>
+          </div>
+          <input type="range" class="custom-slider" id="sliderW4" min="0" max="100" value="15" oninput="onWeightChange()">
+        </div>
+      </div>
+
+      <!-- Panel 3: Spatial Point Inspector -->
+      <div class="panel-card">
+        <div class="panel-title">
+          <span>🔍 Inspeksi Titik Spasial</span>
+          <span class="badge" id="inspStatusBadge">Klik di Peta OSM</span>
+        </div>
+        <div class="inspector-details">
+          <div class="insp-row">
+            <span class="insp-label">Koordinat:</span>
+            <span class="insp-val" id="inspCoords">-</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-label">Jalan Terdekat:</span>
+            <span class="insp-val" id="inspRoad">-</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-label">Jarak ke Jalan:</span>
+            <span class="insp-val" id="inspRoadDist">-</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-label">Ke Pusk. Ujung Menteng:</span>
+            <span class="insp-val" id="inspDistP1">-</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-label">Ke Pusk. Pejuang:</span>
+            <span class="insp-val" id="inspDistP2">-</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-label">Legalitas Lahan:</span>
+            <span class="insp-val" id="inspZonasi">-</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-label">Total Skor Fitness:</span>
+            <span class="insp-val" style="color:var(--theme-primary); font-weight:700;" id="inspScore">-</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Right Content Area: Map Canvas & Analytics -->
+    <section class="content-area">
+      
+      <!-- Interactive OpenStreetMap Card -->
+      <div class="map-card">
+        <div class="map-toolbar">
+          <div class="map-title-box">
+            <span id="activeMapTitle">🗺️ Peta OpenStreetMap Kota Harapan Indah (Bekasi - Cakung)</span>
+          </div>
+
+          <div class="layer-toggles">
+            <span class="toggle-chip active" id="togFaskes" onclick="toggleLayer('faskes')">🏥 Faskes Eksisting</span>
+            <span class="toggle-chip active" id="togOptimal" onclick="toggleLayer('optimal')">⭐ Rekomendasi Optimal</span>
+            <span class="toggle-chip active" id="togRiver" onclick="toggleLayer('river')">🌊 Kanal BKT</span>
+            <span class="toggle-chip active" id="togLandmarks" onclick="toggleLayer('landmarks')">🏢 Landmark</span>
+            <span class="toggle-chip active" id="togParticles" onclick="toggleLayer('particles')">🧬 Partikel Algoritma</span>
+            <span class="toggle-chip active" id="togLines" onclick="toggleLayer('lines')">📏 Garis Jarak</span>
+          </div>
+        </div>
+
+        <!-- Embedded OpenStreetMap Leaflet Container -->
+        <div class="map-embed-wrapper" id="canvasWrapper">
+          <div id="osmMap"></div>
+        </div>
+      </div>
+
+      <!-- Lower Grid: Convergence Chart & Scorecard -->
+      <div class="lower-grid">
+        
+        <!-- Live Chart -->
+        <div class="chart-card">
+          <div class="panel-title">
+            <span>📈 Kurva Konvergensi Generasi</span>
+            <span class="badge">Generasi 0 - 50</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Algorithm Scorecard -->
+        <div class="table-card">
+          <div class="panel-title">
+            <span>🏆 Perbandingan Kinerja Tiga Algoritma</span>
+            <span class="badge">Matched Budget 2.000 Eval</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Algoritma</th>
+                <th>Best Fitness</th>
+                <th>Waktu Komputasi</th>
+                <th>Status Kinerja</th>
+              </tr>
+            </thead>
+            <tbody id="scorecardBody">
+              <tr>
+                <td><span class="algo-badge ga">● GA (Genetika)</span></td>
+                <td id="tblFitGA">0.9412</td>
+                <td id="tblTimeGA">1.45 s</td>
+                <td><span class="tag-win">Tinggi</span></td>
+              </tr>
+              <tr>
+                <td><span class="algo-badge pso">● PSO (Swarm)</span></td>
+                <td id="tblFitPSO">0.9412</td>
+                <td id="tblTimePSO">0.92 s</td>
+                <td><span class="tag-win">Tercepat</span></td>
+              </tr>
+              <tr>
+                <td><span class="algo-badge aco">● ACO (Semut)</span></td>
+                <td id="tblFitACO">0.9412</td>
+                <td id="tblTimeACO">1.04 s</td>
+                <td><span class="tag-win">Stabil</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Scripts -->
+  <!-- Leaflet JS for OpenStreetMap -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="map_data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

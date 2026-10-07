@@ -6,6 +6,7 @@ Menyediakan visualisasi interaktif penuh untuk membandingkan tiga algoritma meta
 3. Ant Colony Optimization (ACO) — Continuous ACOR, Arsip Solusi & Kepadatan Feromon Gaussian
 
 Fitur Utama:
+- Pilihan Peta Wilayah: Mendukung Peta Studi (2.0 x 1.5 km) dan Peta Kecamatan Luas skala OpenStreetMap (5.0 x 4.0 km).
 - Tampilan Multi-Mode: Split 3-Algoritma (GA vs PSO vs ACO bersamaan), Layar Penuh GA, Layar Penuh PSO,
   Layar Penuh ACO, serta Layar Penuh Kurva Konvergensi 3 Algoritma.
 - Kontrol Simulasi Lengkap: Play/Pause, Step, Reset, Run to End, dan Slider Kecepatan Animasi.
@@ -56,12 +57,19 @@ class PuskesmasOptimizationApp:
 
         self._setup_styles()
 
-        # Konfigurasi Peta & Model
+        # Daftar Peta yang Tersedia
+        self.available_maps = {
+            "Peta Kota Harapan Indah (2.4 km x 1.6 km)": "maps/peta_harapan_indah.json",
+            "Peta Wilayah Studi Desa (2.0 km x 1.5 km)": "maps/peta_studi.json",
+            "Peta Kecamatan Luas / OSM (5.0 km x 4.0 km)": "maps/peta_kecamatan_luas.json",
+        }
+        self.current_map_name = "Peta Kota Harapan Indah (2.4 km x 1.6 km)"
+        self.current_map_file = self.available_maps[self.current_map_name]
+        self.map_model = MapModel.load_from_json(self.current_map_file)
+
+        # Konfigurasi Parameter
         self.config_path = "config.json"
         self._load_config()
-
-        self.current_map_file = "maps/peta_studi.json"
-        self.map_model = MapModel.load_from_json(self.current_map_file)
 
         # Mode Tampilan: 'split_3', 'ga', 'pso', 'aco', 'conv'
         self.view_mode = "split_3"
@@ -85,6 +93,11 @@ class PuskesmasOptimizationApp:
         self.current_frame = 0
         self.total_frames = 0
         self.timer_id = None
+
+        # Koleksi Artist Dinamis Matplotlib
+        self.ga_dynamic_artists = []
+        self.pso_dynamic_artists = []
+        self.aco_dynamic_artists = []
 
         # Riwayat Optimasi
         self.ga_history: List[GAGenerationRecord] = []
@@ -161,7 +174,6 @@ class PuskesmasOptimizationApp:
         )
         lbl_sub.pack(anchor="w")
 
-        # Status badge di kanan
         self.status_badge = tk.Label(
             hdr,
             text="STATUS: SIAP",
@@ -179,11 +191,9 @@ class PuskesmasOptimizationApp:
         self.main_paned = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
         self.main_paned.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
 
-        # Panel Kiri: Kontrol & Parameter (Lebar ~360px)
-        self.left_panel = ttk.Frame(self.main_paned, width=380)
+        self.left_panel = ttk.Frame(self.main_paned, width=390)
         self.main_paned.add(self.left_panel, weight=0)
 
-        # Panel Kanan: Canvas Visualisasi Matplotlib
         self.right_panel = ttk.Frame(self.main_paned)
         self.main_paned.add(self.right_panel, weight=1)
 
@@ -210,6 +220,20 @@ class PuskesmasOptimizationApp:
         self._build_tab_edukasi(tab_about)
 
     def _build_tab_simulasi(self, parent):
+        # 0. Pilihan Peta Wilayah
+        card_map = ttk.LabelFrame(parent, text=" 🗺️ Pilihan Peta Wilayah ", padding=8)
+        card_map.pack(fill=tk.X, pady=(0, 8))
+
+        self.cmb_map = ttk.Combobox(
+            card_map,
+            values=list(self.available_maps.keys()),
+            state="readonly",
+            font=("Segoe UI", 8, "bold"),
+        )
+        self.cmb_map.set(self.current_map_name)
+        self.cmb_map.pack(fill=tk.X, pady=2)
+        self.cmb_map.bind("<<ComboboxSelected>>", self._on_map_selected)
+
         # 1. Kontrol Tampilan (View Mode)
         card_view = ttk.LabelFrame(parent, text=" 🖥️ Mode Tampilan Kanvas ", padding=8)
         card_view.pack(fill=tk.X, pady=(0, 8))
@@ -355,7 +379,6 @@ class PuskesmasOptimizationApp:
         self.lbl_insp_fit = ttk.Label(parent, text="Estimasi Fitness: -", font=("Segoe UI", 10, "bold"), foreground="#10b981")
         self.lbl_insp_fit.pack(anchor="w", pady=(6, 8))
 
-        # Progress bars fitur
         self.pb_pop, self.lbl_pb_pop = self._create_feature_bar(parent, "Kepadatan Populasi Pasien (s_pop)", "#38bdf8")
         self.pb_road, self.lbl_pb_road = self._create_feature_bar(parent, "Kelaikan Jalan Ambulans (s_road)", "#eab308")
         self.pb_fac, self.lbl_pb_fac = self._create_feature_bar(parent, "Sinergi Balai Desa & Posyandu (s_fac)", "#a855f7")
@@ -415,6 +438,12 @@ class PuskesmasOptimizationApp:
         self.toolbar.update()
 
         self.canvas.mpl_connect("button_press_event", self._on_canvas_click)
+
+    def _on_map_selected(self, event=None):
+        self.current_map_name = self.cmb_map.get()
+        self.current_map_file = self.available_maps[self.current_map_name]
+        self.map_model = MapModel.load_from_json(self.current_map_file)
+        self._recompute_optimization(reset_playback=True)
 
     def _set_view_mode(self, mode: str):
         self.view_mode = mode
@@ -531,6 +560,9 @@ class PuskesmasOptimizationApp:
 
     def _init_canvas_plots(self):
         self.fig.clf()
+        self.ga_dynamic_artists.clear()
+        self.pso_dynamic_artists.clear()
+        self.aco_dynamic_artists.clear()
 
         if self.view_mode == "split_3":
             gs = gridspec.GridSpec(
@@ -610,7 +642,6 @@ class PuskesmasOptimizationApp:
         pso_rec = self.pso_history[min(frame_idx, len(self.pso_history) - 1)] if self.pso_history else None
         aco_rec = self.aco_history[min(frame_idx, len(self.aco_history) - 1)] if self.aco_history else None
 
-        # Render dinamis pada masing-masing axis
         if self.ax_ga is not None and ga_rec is not None:
             self._update_ga_plot(self.ax_ga, ga_rec)
 
@@ -634,47 +665,68 @@ class PuskesmasOptimizationApp:
         self.canvas.draw_idle()
 
     def _update_ga_plot(self, ax, rec: GAGenerationRecord):
-        # Bersihkan elemen dinamis sebelumnya
-        for c in list(ax.collections[len(self.map_model.houses) + 5:]):
-            c.remove()
+        for art in self.ga_dynamic_artists:
+            try:
+                art.remove()
+            except Exception:
+                pass
+        self.ga_dynamic_artists.clear()
 
         pop = rec.population
-        ax.scatter(pop[:, 0], pop[:, 1], c="#2563eb", s=32, alpha=0.7, edgecolors="#ffffff", linewidths=0.6, zorder=8)
+        sc1 = ax.scatter(pop[:, 0], pop[:, 1], c="#2563eb", s=32, alpha=0.7, edgecolors="#ffffff", linewidths=0.6, zorder=8)
+        self.ga_dynamic_artists.append(sc1)
 
         elites = pop[rec.elite_indices]
-        ax.scatter(elites[:, 0], elites[:, 1], c="#fbbf24", s=55, marker="D", edgecolors="#b45309", linewidths=1.0, zorder=9)
+        sc2 = ax.scatter(elites[:, 0], elites[:, 1], c="#fbbf24", s=55, marker="D", edgecolors="#b45309", linewidths=1.0, zorder=9)
+        self.ga_dynamic_artists.append(sc2)
 
         bx, by = rec.best_position[0], rec.best_position[1]
-        ax.scatter(bx, by, c="#10b981", s=130, marker="*", edgecolors="#ffffff", linewidths=1.5, zorder=10)
+        sc3 = ax.scatter(bx, by, c="#10b981", s=130, marker="*", edgecolors="#ffffff", linewidths=1.5, zorder=10)
+        self.ga_dynamic_artists.append(sc3)
 
     def _update_pso_plot(self, ax, rec: PSOIterationRecord):
-        for c in list(ax.collections[len(self.map_model.houses) + 5:]):
-            c.remove()
+        for art in self.pso_dynamic_artists:
+            try:
+                art.remove()
+            except Exception:
+                pass
+        self.pso_dynamic_artists.clear()
 
         pos = rec.positions
-        ax.scatter(pos[:, 0], pos[:, 1], c="#dc2626", s=32, alpha=0.7, edgecolors="#ffffff", linewidths=0.6, zorder=8)
+        sc1 = ax.scatter(pos[:, 0], pos[:, 1], c="#dc2626", s=32, alpha=0.7, edgecolors="#ffffff", linewidths=0.6, zorder=8)
+        self.pso_dynamic_artists.append(sc1)
 
         pb = rec.pbest_positions
-        ax.scatter(pb[:, 0], pb[:, 1], c="#fb923c", s=40, marker="s", alpha=0.5, edgecolors="none", zorder=8.5)
+        sc2 = ax.scatter(pb[:, 0], pb[:, 1], c="#fb923c", s=40, marker="s", alpha=0.5, edgecolors="none", zorder=8.5)
+        self.pso_dynamic_artists.append(sc2)
 
         gx, gy = rec.gbest_position[0], rec.gbest_position[1]
-        ax.scatter(gx, gy, c="#10b981", s=130, marker="*", edgecolors="#ffffff", linewidths=1.5, zorder=10)
+        sc3 = ax.scatter(gx, gy, c="#10b981", s=130, marker="*", edgecolors="#ffffff", linewidths=1.5, zorder=10)
+        self.pso_dynamic_artists.append(sc3)
 
     def _update_aco_plot(self, ax, rec: ACOIterationRecord):
-        for c in list(ax.collections[len(self.map_model.houses) + 5:]):
-            c.remove()
+        for art in self.aco_dynamic_artists:
+            try:
+                art.remove()
+            except Exception:
+                pass
+        self.aco_dynamic_artists.clear()
 
         ants = rec.ant_positions
-        ax.scatter(ants[:, 0], ants[:, 1], c="#059669", s=34, alpha=0.75, edgecolors="#ffffff", linewidths=0.6, zorder=8)
+        sc1 = ax.scatter(ants[:, 0], ants[:, 1], c="#059669", s=34, alpha=0.75, edgecolors="#ffffff", linewidths=0.6, zorder=8)
+        self.aco_dynamic_artists.append(sc1)
 
         arch = rec.archive_positions
-        ax.scatter(arch[:, 0], arch[:, 1], c="#10b981", s=45, marker="^", alpha=0.6, edgecolors="#047857", linewidths=0.8, zorder=8.5)
+        sc2 = ax.scatter(arch[:, 0], arch[:, 1], c="#10b981", s=45, marker="^", alpha=0.6, edgecolors="#047857", linewidths=0.8, zorder=8.5)
+        self.aco_dynamic_artists.append(sc2)
 
         bx, by = rec.best_position[0], rec.best_position[1]
-        ax.scatter(bx, by, c="#10b981", s=130, marker="*", edgecolors="#ffffff", linewidths=1.5, zorder=10)
+        sc3 = ax.scatter(bx, by, c="#10b981", s=130, marker="*", edgecolors="#ffffff", linewidths=1.5, zorder=10)
+        self.aco_dynamic_artists.append(sc3)
 
     def _update_conv_plot(self, ax, frame_idx: int):
-        ax.lines.clear()
+        for line in list(ax.lines):
+            line.remove()
 
         ga_sub = self.ga_history[: min(frame_idx + 1, len(self.ga_history))]
         if ga_sub:

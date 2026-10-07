@@ -106,7 +106,7 @@ def generate_all_gifs():
     save_as_gif(frames_split_max, "results/simulasi_maksimasi_split.gif", fps=7)
 
     # Mode Minimasi Valid
-    print("\n[2/2] Menghitung Mode Minimasi Valid...", flush=True)
+    print("\n[2/4] Menghitung Mode Minimasi Valid (Peta Studi)...", flush=True)
     app.mode_var.set("min_valid")
     app._recompute_optimization(reset_playback=True)
     root.update()
@@ -114,6 +114,41 @@ def generate_all_gifs():
     print("  Mengekspor Split 3-Algoritma Minimasi...", flush=True)
     frames_split_min = capture_view_frames(app, "split_3", step_interval=2)
     save_as_gif(frames_split_min, "results/simulasi_minimasi_split.gif", fps=7)
+
+    # 3. Peta Kecamatan Luas (5.0 x 4.0 km) Maksimasi
+    os.makedirs("results_luas", exist_ok=True)
+    print("\n[3/4] Beralih ke Peta Kecamatan Luas (5.0 x 4.0 km) - Maksimasi...", flush=True)
+    app.cmb_map.set("Peta Kecamatan Luas / OSM (5.0 km x 4.0 km)")
+    app._on_map_selected()
+    app.mode_var.set("max")
+    app._recompute_optimization(reset_playback=True)
+    root.update()
+
+    print("  Mengekspor Split 3-Algoritma Maksimasi (Kecamatan Luas)...", flush=True)
+    frames_luas_split = capture_view_frames(app, "split_3", step_interval=2)
+    save_as_gif(frames_luas_split, "results_luas/simulasi_maksimasi_split.gif", fps=7)
+
+    print("  Mengekspor GA Maksimasi (Kecamatan Luas)...", flush=True)
+    frames_luas_ga = capture_view_frames(app, "ga", step_interval=2)
+    save_as_gif(frames_luas_ga, "results_luas/ga_maksimasi.gif", fps=7)
+
+    print("  Mengekspor PSO Maksimasi (Kecamatan Luas)...", flush=True)
+    frames_luas_pso = capture_view_frames(app, "pso", step_interval=2)
+    save_as_gif(frames_luas_pso, "results_luas/pso_maksimasi.gif", fps=7)
+
+    print("  Mengekspor ACO Maksimasi (Kecamatan Luas)...", flush=True)
+    frames_luas_aco = capture_view_frames(app, "aco", step_interval=2)
+    save_as_gif(frames_luas_aco, "results_luas/aco_maksimasi.gif", fps=7)
+
+    # 4. Peta Kecamatan Luas - Minimasi Valid
+    print("\n[4/4] Menghitung Mode Minimasi Valid (Kecamatan Luas)...", flush=True)
+    app.mode_var.set("min_valid")
+    app._recompute_optimization(reset_playback=True)
+    root.update()
+
+    print("  Mengekspor Split 3-Algoritma Minimasi (Kecamatan Luas)...", flush=True)
+    frames_luas_min = capture_view_frames(app, "split_3", step_interval=2)
+    save_as_gif(frames_luas_min, "results_luas/simulasi_minimasi_split.gif", fps=7)
 
     t_total = time.time() - t_start
     print("\n" + "=" * 75, flush=True)
