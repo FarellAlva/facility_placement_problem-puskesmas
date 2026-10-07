@@ -72,44 +72,19 @@ body {
 .dash-brand {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-}
-
-.dash-logo-icon {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--theme-primary);
-  border-radius: var(--radius-sm);
-  color: white;
 }
 
 .dash-brand-text h1 {
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
+  margin-bottom: 0.1rem;
 }
 
 .dash-brand-text p {
   font-size: 0.72rem;
-  color: var(--text-secondary);
-}
-
-.dash-badge {
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 0.12rem 0.45rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--theme-primary-subtle);
-  color: var(--theme-primary);
-  border: 1px solid rgba(249, 115, 22, 0.25);
+  color: var(--text-muted);
 }
 
 .dash-header-actions {
@@ -124,9 +99,9 @@ body {
   gap: 0.4rem;
   background-color: var(--bg-main);
   border: 1px solid var(--border-color);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0.3rem 0.65rem;
   border-radius: var(--radius-sm);
 }
@@ -135,13 +110,20 @@ body {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  background-color: var(--theme-emerald-subtle);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: var(--theme-emerald);
-  padding: 0.25rem 0.65rem;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.28rem 0.65rem;
   border-radius: var(--radius-sm);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
 }
 
 .status-dot {
@@ -439,24 +421,24 @@ body {
   border: 1px solid transparent;
 }
 .curation-badge.very-dense {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: #2d1518;
+  color: #fca5a5;
+  border-color: #4c1d24;
 }
 .curation-badge.dense {
-  background: rgba(249, 115, 22, 0.15);
-  color: #fb923c;
-  border-color: rgba(249, 115, 22, 0.3);
+  background: #2b1810;
+  color: #fdba74;
+  border-color: #452214;
 }
 .curation-badge.medium {
-  background: rgba(234, 179, 8, 0.15);
-  color: #facc15;
-  border-color: rgba(234, 179, 8, 0.3);
+  background: #252010;
+  color: #fde047;
+  border-color: #423814;
 }
 .curation-badge.low {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border-color: rgba(59, 130, 246, 0.3);
+  background: #111e33;
+  color: #93c5fd;
+  border-color: #1e3a5f;
 }
 
 .curation-val-text {
@@ -532,54 +514,81 @@ body {
   flex-direction: column;
 }
 
-.map-toolbar {
+.map-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.25rem 0.35rem 0.55rem 0.35rem;
+  padding: 0.2rem 0.25rem 0.5rem 0.25rem;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  gap: 0.4rem;
 }
 
 .map-title-box {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.map-coord-tag {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.map-layer-footer {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.8rem;
-  font-weight: 700;
+  gap: 0.6rem;
+  padding: 0.55rem 0.25rem 0.15rem 0.25rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.layer-footer-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .layer-toggles {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
 }
 
 .toggle-chip {
   background: var(--bg-main);
   border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.18rem 0.45rem;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.55rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.12s ease;
   user-select: none;
+  outline: none;
+  box-shadow: none !important;
 }
 
 .toggle-chip:hover {
-  border-color: var(--border-subtle);
+  background: var(--bg-card-hover);
+  border-color: #334155;
   color: var(--text-primary);
 }
 
 .toggle-chip.active {
-  background: var(--theme-primary-subtle);
-  color: var(--theme-primary);
-  border-color: rgba(249, 115, 22, 0.4);
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  font-weight: 600;
+  box-shadow: none !important;
 }
 
 /* OpenStreetMap Container (Flat, No Bulge) */
