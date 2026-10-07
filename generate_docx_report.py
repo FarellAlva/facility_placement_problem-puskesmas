@@ -25,6 +25,27 @@ HEX_ALT_ROW = "F1F5F9"
 HEX_BORDER = "CBD5E1"
 HEX_ACCENT_ORANGE = "EA580C"
 
+def add_hyperlink(paragraph, url, text, color="006699", underline=True):
+    """Add a clickable hyperlink to a paragraph."""
+    part = paragraph.part
+    r_id = part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+    hyperlink = parse_xml(
+        f'<w:hyperlink {nsdecls("w")} xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="{r_id}"/>'
+    )
+    u_tag = '<w:u w:val="single"/>' if underline else ''
+    new_run = parse_xml(
+        f'<w:r {nsdecls("w")}>'
+        f'<w:rPr>'
+        f'<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>'
+        f'<w:color w:val="{color}"/>'
+        f'{u_tag}'
+        f'</w:rPr>'
+        f'<w:t>{text}</w:t>'
+        f'</w:r>'
+    )
+    hyperlink.append(new_run)
+    paragraph._p.append(hyperlink)
+
 def set_cell_background(cell, hex_color):
     tcPr = cell._element.get_or_add_tcPr()
     shd = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{hex_color}"/>')
@@ -215,11 +236,21 @@ def main():
     p_meta = doc.add_paragraph()
     p_meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_meta.paragraph_format.space_before = Pt(0)
-    p_meta.paragraph_format.space_after = Pt(14)
+    p_meta.paragraph_format.space_after = Pt(2)
     r_meta = p_meta.add_run("Farell Alvaro Theriono   |   Universitas Pradita, Informatika   |   Bio-Inspired Computing")
     r_meta.font.name = "Calibri"
     r_meta.font.size = Pt(10)
     r_meta.font.color.rgb = COLOR_MUTED
+
+    p_git = doc.add_paragraph()
+    p_git.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_git.paragraph_format.space_before = Pt(0)
+    p_git.paragraph_format.space_after = Pt(14)
+    r_git_lbl = p_git.add_run("Source Code (GitHub Repository): ")
+    r_git_lbl.font.name = "Calibri"
+    r_git_lbl.font.size = Pt(9.5)
+    r_git_lbl.font.color.rgb = COLOR_MUTED
+    add_hyperlink(p_git, "https://github.com/FarellAlva/facility_placement_problem-puskesmas", "https://github.com/FarellAlva/facility_placement_problem-puskesmas", color="006699", underline=True)
 
     # =========================================================================
     # RINGKASAN EKSEKUTIF
@@ -500,6 +531,78 @@ def main():
     format_bullet(doc, "Jarak ke Puskesmas Eksisting: 1.399 meter ke Puskesmas Ujung Menteng (faskes barat) dan 1.212 meter ke Puskesmas Pejuang (faskes timur laut). Jarak ini jauh di atas batas aman 300 meter, menjamin bebas kanibalisasi layanan.", "• ")
     format_bullet(doc, "Cakupan Populasi: Berada tepat di titik keseimbangan antara pemukiman sangat padat di barat (Satria/Ujung Menteng) dan pemukiman padat di timur (Palem/THB), menghasilkan rata-rata respon ambulans 3,4 menit.", "• ")
 
+    format_heading(doc, "5.5 Analisis Komparasi Penempatan 1, 2, dan 3 Unit Puskesmas (Fokus Bebas Distraksi)", level=2)
+    format_paragraph(doc, "Untuk memberikan analisis spasial yang mendalam dan mudah dipahami, antarmuka web dilengkapi fitur penonaktifan layer (toggle off) untuk Hierarki Jalan dan Kepadatan Penduduk. Dengan menonaktifkan kedua layer tersebut, visualisasi peta menjadi bersih (clean focus) sehingga pengambil kebijakan dapat berfokus penuh pada posisi tapak Puskesmas baru, radius jangkauan layanan primer (lingkaran 800 meter), serta garis konektivitas jarak terhadap sentra fasilitas penunjang vital (seperti Apotek/Posyandu, Minimarket/Pasar Modern, dan RS Rujukan Lanjutan):")
+
+    add_figure(doc, "results_harapan_indah/doc_clean_1_pcs.png", "Gambar 5. Rekomendasi Penempatan 1 Unit Puskesmas (Fokus Tapak Tunggal di Jl. Boulevard Harapan Indah, Radius Layanan 800m, dan Garis Jarak ke Apotek/Minimarket/RS, dengan layer jalan dan populasi dinonaktifkan).")
+    add_figure(doc, "results_harapan_indah/doc_clean_2_pcs.png", "Gambar 6. Rekomendasi Penempatan 2 Unit Puskesmas (Bipartisi Wilayah: Unit #1 di Sentra Boulevard Timur dan Unit #2 di Koridor Penghubung Barat Laut, Jarak Pemisahan 404m).")
+    add_figure(doc, "results_harapan_indah/doc_clean_3_pcs.png", "Gambar 7. Rekomendasi Penempatan 3 Unit Puskesmas (Triangulasi Komprehensif: Unit #1 di Barat Ujung Menteng, Unit #2 di Utara Sentra Santika, dan Unit #3 di Selatan Medan Satria).")
+
+    format_paragraph(doc, "Tabel 4 menyajikan perbandingan komparatif spasial dan fungsional dari ketiga skenario jumlah penempatan Puskesmas:")
+
+    # Table Komparasi 1, 2, 3 Unit
+    tbl_multi = doc.add_table(rows=4, cols=7)
+    tbl_multi.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(tbl_multi)
+
+    headers_multi = ["Skenario", "Koordinat Tapak (m)", "Landmark Penunjang Terdekat", "Jarak Antar-Puskesmas Baru", "Jarak ke Faskes Eksisting", "Respon Ambulans", "Rekomendasi Kebijakan"]
+    for j, h in enumerate(headers_multi):
+        cell = tbl_multi.cell(0, j)
+        set_cell_background(cell, HEX_PRIMARY)
+        set_cell_margins(cell, top=100, bottom=100, left=80, right=80)
+        p = cell.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run(h)
+        run.bold = True
+        run.font.name = "Calibri"
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor(255, 255, 255)
+
+    data_multi = [
+        [
+            "1 Unit Puskesmas",
+            "Unit #1: (1.744, 338)",
+            "• RS Citra Harapan (538 m)\n• Pasar Meli Melo & Minimarket (340 m)\n• Hotel Santika Premiere (280 m)",
+            "- (Tunggal)",
+            "• Pusk. Ujung Menteng: 1.131 m\n• Pusk. Pejuang: 1.212 m",
+            "3.4 menit (Grade A)",
+            "Prioritas Tahap I: Anggaran efisien, mampu menjangkau 98.6% warga dari koridor arteri utama."
+        ],
+        [
+            "2 Unit Puskesmas",
+            "Unit #1: (1.744, 338)\nUnit #2: (1.350, 480)",
+            "• RS Citra Harapan (445 m & 551 m)\n• Apotek/Posyandu Satria (420 m)\n• COURTS Megastore (210 m)",
+            "404 meter (Aman > 300m, bebas kanibalisasi)",
+            "• Pusk. Ujung Menteng: 1.112 m & 1.398 m\n• Pusk. Pejuang: 1.150 m & 1.320 m",
+            "2.8 menit (Grade A+)",
+            "Prioritas Tahap II: Bipartisi wilayah memisahkan beban warga perkampungan barat dan klaster perumahan timur."
+        ],
+        [
+            "3 Unit Puskesmas",
+            "Unit #1: (780, 520)\nUnit #2: (1.520, 680)\nUnit #3: (1.280, 180)",
+            "• Apotek/Posyandu Satria (180 m)\n• Minimarket & Meli Melo (190 m)\n• RS Citra Harapan (483 m)\n• Pendidikan Al-Azhar (250 m)",
+            "• Unit 1 ke 2: 1.446 m\n• Unit 1 ke 3: 1.279 m\n• Unit 2 ke 3: 684 m",
+            "• Pusk. Ujung Menteng: 967 m\n• Pusk. Pejuang: 1.158 m",
+            "2.1 menit (Super Cepat)",
+            "Prioritas Jangka Panjang: Triangulasi penuh menjamin redundansi proteksi kesehatan wilayah hingga tahun 2035."
+        ]
+    ]
+
+    for i, row in enumerate(data_multi):
+        bg = HEX_ALT_ROW if i % 2 == 1 else "FFFFFF"
+        for j, val in enumerate(row):
+            cell = tbl_multi.cell(i + 1, j)
+            set_cell_background(cell, bg)
+            set_cell_margins(cell, top=80, bottom=80, left=80, right=80)
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER if j in [0, 3, 5] else WD_ALIGN_PARAGRAPH.LEFT
+            r = p.add_run(val)
+            r.font.name = "Calibri"
+            r.font.size = Pt(8.5)
+            r.font.color.rgb = COLOR_TEXT_MAIN
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(8)
+
     # =========================================================================
     # BAB 6. IMPLEMENTASI SISTEM WEB DAN VISUALISASI INTERAKTIF
     # =========================================================================
@@ -512,12 +615,12 @@ def main():
     format_bullet(doc, "Spatial Inspector Panel yang memungkinkan pengguna mengeklik titik mana saja di peta untuk mengecek koordinat, legalitas lahan, dan estimasi fitness.", "• ")
 
     format_heading(doc, "6.2 Tangkapan Layar (Screenshot) Antarmuka Web Interaktif", level=2)
-    format_paragraph(doc, "Gambar 5 menyajikan tampilan antarmuka web interaktif Spatial Health Intelligence Harapan Indah Puskesmas Placement Engine:")
+    format_paragraph(doc, "Gambar 8 menyajikan tampilan antarmuka web interaktif Spatial Health Intelligence Harapan Indah Puskesmas Placement Engine. Seluruh kode sumber aplikasi web dan model optimasi bersifat terbuka (open-source) dan dapat diakses publik melalui repositori GitHub: https://github.com/FarellAlva/facility_placement_problem-puskesmas")
 
-    add_figure(doc, "results_harapan_indah/doc_web_dashboard.png", "Gambar 5. Tampilan Penuh Dashboard Aplikasi Web Interaktif Penempatan Puskesmas Harapan Indah Berbasis OpenStreetMap Leaflet.js.")
+    add_figure(doc, "results_harapan_indah/doc_web_dashboard.png", "Gambar 8. Tampilan Penuh Dashboard Aplikasi Web Interaktif Penempatan Puskesmas Harapan Indah Berbasis OpenStreetMap Leaflet.js.")
 
     format_heading(doc, "6.3 Skenario Multi-Fasilitas (1, 2, dan 3 Pcs)", level=2)
-    format_paragraph(doc, "Aplikasi web juga dilengkapi fitur penempatan multi-fasilitas (1 Pcs, 2 Pcs, atau 3 Pcs). Ketika jumlah fasilitas dinaikkan menjadi 2 atau 3 unit, algoritma secara cerdas membagi wilayah menjadi klaster barat (melayani Ujung Menteng dan Metland) dan klaster timur (melayani Palem, THB, dan Pejuang), sehingga utilisasi faskes terdistribusi merata.")
+    format_paragraph(doc, "Aplikasi web juga dilengkapi fitur penempatan multi-fasilitas (1 Pcs, 2 Pcs, atau 3 Pcs). Ketika jumlah fasilitas dinaikkan menjadi 2 atau 3 unit, algoritma secara cerdas membagi wilayah menjadi klaster barat (melayani Ujung Menteng dan Metland) dan klaster timur (melayani Palem, THB, dan Pejuang), sehingga utilisasi faskes terdistribusi merata sebagaimana telah dianalisis pada Subbab 5.5.")
 
     # =========================================================================
     # BAB 7. PEMBAHASAN MENDALAM
@@ -525,7 +628,7 @@ def main():
     format_heading(doc, "BAB 7. PEMBAHASAN MENDALAM", level=1)
 
     format_heading(doc, "7.1 Komparasi Kelebihan dan Kelemahan GA, PSO, dan ACO", level=2)
-    format_paragraph(doc, "Tabel 4 menyajikan perbandingan komparatif karakteristik ketiga algoritma bio-inspired pada permasalahan penempatan fasilitas spasial kontinu:")
+    format_paragraph(doc, "Tabel 5 menyajikan perbandingan komparatif karakteristik ketiga algoritma bio-inspired pada permasalahan penempatan fasilitas spasial kontinu:")
 
     # Table Komparasi Algoritma
     tbl_comp = doc.add_table(rows=6, cols=4)
@@ -621,9 +724,15 @@ def main():
         r.font.color.rgb = COLOR_TEXT_MAIN
 
     output_filename = "Laporan_Optimasi_GA_PSO_ACO_Puskesmas.docx"
-    doc.save(output_filename)
-    print(f"Dokumen Word berhasil dibuat: {output_filename}")
-    print(f"Ukuran file: {os.path.getsize(output_filename)/1024:.1f} KB")
+    try:
+        doc.save(output_filename)
+        print(f"Dokumen Word berhasil dibuat: {output_filename}")
+        print(f"Ukuran file: {os.path.getsize(output_filename)/1024:.1f} KB")
+    except PermissionError:
+        output_filename = "Laporan_Optimasi_GA_PSO_ACO_Puskesmas_Updated.docx"
+        doc.save(output_filename)
+        print(f"File utama terkunci (terbuka di Word). Dokumen berhasil disimpan sebagai: {output_filename}")
+        print(f"Ukuran file: {os.path.getsize(output_filename)/1024:.1f} KB")
 
 if __name__ == "__main__":
     main()
