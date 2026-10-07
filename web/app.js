@@ -168,17 +168,18 @@
     }
 
     // Cache Management: Automatically purge legacy obsolete curation versions
-    const CURATION_STORAGE_KEY = 'puskesmas_harapan_indah_curation_v3';
+    const CURATION_STORAGE_KEY = 'puskesmas_harapan_indah_curation_v4';
     try {
       localStorage.removeItem('puskesmas_harapan_indah_curation');
       localStorage.removeItem('puskesmas_harapan_indah_curation_v1');
       localStorage.removeItem('puskesmas_harapan_indah_curation_v2');
+      localStorage.removeItem('puskesmas_harapan_indah_curation_v3');
 
       const saved = localStorage.getItem(CURATION_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Only restore if it matches version 3 and contains the full dataset
-        if (parsed.version === 3 && parsed.houses && Array.isArray(parsed.houses) && parsed.houses.length >= 500) {
+        // Only restore if it matches version 4 and contains the full dataset
+        if (parsed.version === 4 && parsed.houses && Array.isArray(parsed.houses) && parsed.houses.length >= 800) {
           state.mapData.houses = parsed.houses;
           if (parsed.curated_zones && Array.isArray(parsed.curated_zones)) {
             state.mapData.curated_zones = parsed.curated_zones;
@@ -684,12 +685,12 @@
     }
   };
 
-  const CURATION_STORAGE_KEY = 'puskesmas_harapan_indah_curation_v3';
+  const CURATION_STORAGE_KEY = 'puskesmas_harapan_indah_curation_v4';
 
   function saveCurationToLocalStorage() {
     try {
       const payload = {
-        version: 3,
+        version: 4,
         houses: state.mapData.houses,
         curated_zones: state.mapData.curated_zones
       };
@@ -836,6 +837,7 @@
       localStorage.removeItem('puskesmas_harapan_indah_curation');
       localStorage.removeItem('puskesmas_harapan_indah_curation_v1');
       localStorage.removeItem('puskesmas_harapan_indah_curation_v2');
+      localStorage.removeItem('puskesmas_harapan_indah_curation_v3');
     } catch (e) {}
 
     // Reload baseline preset

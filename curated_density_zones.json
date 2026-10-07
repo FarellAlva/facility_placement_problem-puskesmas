@@ -11,17 +11,16 @@
       -6.1848,
       106.9765
     ],
-    "sample_count": 48,
-    "spread_radius": 220,
+    "sample_count": 65,
     "default_weight": 4.5,
     "current_weight": 4.5,
     "category": "Padat",
-    "estimated_families": 2100
+    "estimated_families": 2400
   },
   {
     "id": "zone_ujung_menteng",
     "name": "Perkampungan Satria Ujung Menteng",
-    "description": "Grid pemukiman padat perkampungan perkotaan sisi barat BKT (Jl. Satria I-XII & Wijaya Kusuma I-X).",
+    "description": "Grid pemukiman perkampungan padat perkotaan sisi barat BKT (Jl. Satria I-XII, Jl. Wijaya Kusuma I-X, Gang Swadaya).",
     "center_meter": [
       350.0,
       900.0
@@ -30,106 +29,82 @@
       -6.1869,
       106.9667
     ],
-    "sample_count": 75,
-    "spread_radius": 240,
-    "default_weight": 5.5,
-    "current_weight": 5.5,
+    "sample_count": 176,
+    "default_weight": 5.4,
+    "current_weight": 5.4,
     "category": "Sangat Padat",
-    "estimated_families": 2800
+    "estimated_families": 3200
+  },
+  {
+    "id": "zone_metland_irigasi",
+    "name": "Metland Menteng, Valeria & Tiara",
+    "description": "Grid perumahan terencana sisi barat laut (Jl. Menteng Utama, Menteng Tiara, Menteng Niaga, Jl. Valeria Boulevard).",
+    "center_meter": [
+      450.0,
+      1350.0
+    ],
+    "gps_coords": [
+      -6.1828,
+      106.9676
+    ],
+    "sample_count": 98,
+    "default_weight": 4.5,
+    "current_weight": 4.5,
+    "category": "Padat",
+    "estimated_families": 2600
   },
   {
     "id": "zone_thb_utara",
     "name": "Perumahan THB, Dahlia & Sartika",
     "description": "Kompleks grid perumahan tapak bagian utara (Jl. Dahlia Indah, Dewi Sartika, Taman Harapan Baru).",
     "center_meter": [
-      1850.0,
+      1950.0,
       1400.0
     ],
     "gps_coords": [
       -6.1824,
-      106.9802
+      106.981
     ],
-    "sample_count": 42,
-    "spread_radius": 200,
-    "default_weight": 4.2,
-    "current_weight": 4.2,
+    "sample_count": 107,
+    "default_weight": 4.1,
+    "current_weight": 4.1,
     "category": "Padat Menengah",
-    "estimated_families": 2200
-  },
-  {
-    "id": "zone_metland_irigasi",
-    "name": "Metland Menteng & Jl. Irigasi",
-    "description": "Grid perumahan terencana sisi barat laut (Jl. Menteng Utama, Menteng Tiara, Menteng Niaga, Jl. Irigasi).",
-    "center_meter": [
-      550.0,
-      1250.0
-    ],
-    "gps_coords": [
-      -6.1837,
-      106.9685
-    ],
-    "sample_count": 45,
-    "spread_radius": 210,
-    "default_weight": 4.6,
-    "current_weight": 4.6,
-    "category": "Padat",
-    "estimated_families": 1900
+    "estimated_families": 2300
   },
   {
     "id": "zone_boulevard_hijau",
     "name": "Klaster Boulevard Hijau & Pejuang",
     "description": "Klaster perumahan modern di sepanjang koridor Jl. Boulevard Hijau Raya menuju Medan Satria.",
     "center_meter": [
-      1750.0,
+      1850.0,
       850.0
     ],
     "gps_coords": [
       -6.1873,
-      106.9792
+      106.9801
     ],
-    "sample_count": 35,
-    "spread_radius": 190,
-    "default_weight": 3.8,
-    "current_weight": 3.8,
+    "sample_count": 304,
+    "default_weight": 3.6,
+    "current_weight": 3.6,
     "category": "Sedang",
-    "estimated_families": 1500
+    "estimated_families": 1800
   },
   {
     "id": "zone_sentra_niaga",
     "name": "Sentra Niaga GrandLucky & COURTS",
     "description": "Kawasan komersial ritel, supermarket, ruko bisnis, dan sentra kuliner sepanjang Jl. Boulevard.",
     "center_meter": [
-      1280.0,
-      1100.0
+      1235.0,
+      950.0
     ],
     "gps_coords": [
-      -6.1851,
-      106.975
+      -6.1865,
+      106.9746
     ],
-    "sample_count": 15,
-    "spread_radius": 140,
-    "default_weight": 2.2,
-    "current_weight": 2.2,
-    "category": "Rendah (Komersial)",
-    "estimated_families": 450
-  },
-  {
-    "id": "zone_ujung_menteng_selatan",
-    "name": "Kawasan Industri & UP PKB Selatan",
-    "description": "Area pergudangan, fasilitas pengujian kendaraan bermotor (PKB), dan ruko sisi Jl. Raya Bekasi.",
-    "center_meter": [
-      220.0,
-      500.0
-    ],
-    "gps_coords": [
-      -6.1905,
-      106.9655
-    ],
-    "sample_count": 10,
-    "spread_radius": 130,
-    "default_weight": 1.5,
-    "current_weight": 1.5,
-    "category": "Sangat Rendah (Industri)",
-    "estimated_families": 160
+    "sample_count": 90,
+    "default_weight": 2.5,
+    "current_weight": 2.5,
+    "category": "Rendah / Ruko",
+    "estimated_families": 350
   }
 ]
