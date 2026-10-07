@@ -1,5 +1,21 @@
 # 🏥 Optimasi Penempatan Fasilitas Puskesmas: Komparasi GA vs PSO vs ACO & OpenStreetMap Web UI
 
+> **Penulis**: **Farell Alvaro Theriono**  
+> **Repository**: [https://github.com/FarellAlva/facility_placement_problem-puskesmas](https://github.com/FarellAlva/facility_placement_problem-puskesmas)  
+> **Laporan Akademik Lengkap**: [Laporan_Optimasi_GA_PSO_ACO_Puskesmas_Updated.docx](Laporan_Optimasi_GA_PSO_ACO_Puskesmas_Updated.docx)
+
+<div align="center">
+
+### 🚀 Animasi Simulasi Pencarian Optimasi (Kota Harapan Indah)
+
+![Simulasi Optimasi Pencarian Penempatan Puskesmas](results_harapan_indah/optimasi_search_harapan_indah.gif)
+
+*Visualisasi proses eksplorasi dan konvergensi metaheuristik secara real-time di atas peta OpenStreetMap Kota Harapan Indah (Bekasi - Cakung), mencari titik penempatan faskes terbaik di Jl. Siliwangi / GrandLucky.*
+
+</div>
+
+---
+
 Sistem Pemodelan Spasial dan Komparasi Tiga Algoritma Metaheuristik (*Real-Coded Genetic Algorithm*, *Continuous Particle Swarm Optimization*, dan *Continuous Ant Colony Optimization $\text{ACO}_\mathbb{R}$*) yang dibangun murni dari nol (*from scratch* menggunakan NumPy & Vanilla JS). Proyek ini memecahkan permasalahan **Facility Location Problem (FLP)** fasilitas kesehatan publik (**Pusat Kesehatan Masyarakat / Puskesmas**) dengan dukungan **Web App Terintegrasi OpenStreetMap** yang modern, bersih, dan mudah dipahami.
 
 Mendukung 3 skenario peta spasial:
@@ -136,7 +152,13 @@ Dieksekusi 30 run independen dengan matched budget 2.000 evaluasi:
 
 ## 🎬 Galeri Visual & Tangkapan Layar
 
-### 1. Antarmuka Desktop Tkinter GUI (Harapan Indah)
+### 1. Dashboard Web Interaktif OpenStreetMap (Kota Harapan Indah)
+![Web Dashboard Harapan Indah](results_harapan_indah/doc_web_dashboard.png)
+
+### 2. Animasi Simulasi Multi-Algoritma (Desktop Tkinter)
+![Animasi Simulasi Split 3 Algoritma](results/simulasi_maksimasi_split.gif)
+
+### 3. Tangkapan Layar Antarmuka Desktop Tkinter GUI
 | Tampilan Split 3-Algoritma | Layar Penuh Konvergensi |
 | :---: | :---: |
 | ![GUI Split HI](results_harapan_indah/tkinter_simulasi_split.png) | ![GUI Conv HI](results_harapan_indah/tkinter_simulasi_conv_full.png) |
@@ -150,12 +172,12 @@ Dieksekusi 30 run independen dengan matched budget 2.000 evaluasi:
 ## 💻 Panduan Menjalankan Aplikasi & Skrip
 
 ### 1. Menjalankan Aplikasi Web OpenStreetMap (Recommended)
-Aplikasi web dapat dibuka langsung di peramban tanpa instalasi server:
+Aplikasi web dapat dibuka langsung di peramban tanpa instalasi server tambahan:
 ```bash
-# Opsi A: Jalankan skrip peluncur lokal (otomatis membuka browser)
+# Opsi A: Jalankan skrip peluncur lokal (otomatis membuka peramban)
 python run_web.py
 
-# Opsi B: Atau langsung buka file web/index.html di browser Chrome/Edge/Firefox
+# Opsi B: Buka file index.html langsung di browser Chrome/Edge/Firefox
 start web/index.html
 ```
 
@@ -163,16 +185,16 @@ start web/index.html
 ```bash
 python app_tkinter.py
 ```
-*Gunakan combobox di panel kiri untuk beralih antara "Peta Kota Harapan Indah", "Peta Wilayah Studi Desa", dan "Peta Kecamatan Luas".*
+*Gunakan menu combobox di panel kiri untuk beralih antara "Peta Kota Harapan Indah", "Peta Wilayah Studi Desa", dan "Peta Kecamatan Luas".*
 
 ### 3. Menjalankan Eksperimen Batch & Analisis
 ```bash
-# Batch Harapan Indah
+# Batch 30-Run Harapan Indah
 python run_batch.py --map maps/peta_harapan_indah.json --output-dir results_harapan_indah --runs 30 --budget 2000
 python analyze.py --results-dir results_harapan_indah --map maps/peta_harapan_indah.json
 
-# Regenerasi Laporan Dokumen Word
-python build_docx_report.py
+# Regenerasi Dokumen Laporan Word Akademik Lengkap
+python generate_docx_report.py
 ```
 
 ### 4. Menjalankan Pengujian Otomatis
@@ -181,4 +203,6 @@ pytest -v
 ```
 
 ---
-*Laporan resmi komparasi ilmiah lengkap berformat akademik tersedia di [LAPORAN_OPTIMASI_PUSKESMAS_GA_PSO_ACO.docx](LAPORAN_OPTIMASI_PUSKESMAS_GA_PSO_ACO.docx).*
+*Laporan resmi komparasi ilmiah lengkap berformat akademik tersedia di [Laporan_Optimasi_GA_PSO_ACO_Puskesmas_Updated.docx](Laporan_Optimasi_GA_PSO_ACO_Puskesmas_Updated.docx).*
+*Penulis: **Farell Alvaro Theriono** — GitHub: [https://github.com/FarellAlva/facility_placement_problem-puskesmas](https://github.com/FarellAlva/facility_placement_problem-puskesmas)*
+
