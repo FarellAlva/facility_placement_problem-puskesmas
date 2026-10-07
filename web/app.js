@@ -1346,7 +1346,7 @@
             </div>
             <span style="color:#93c5fd;">Ke Pusk. Ujung Menteng: <b>${d1} m</b></span><br>
             <span style="color:#6ee7b7;">Ke Pusk. Pejuang: <b>${d2} m</b></span><br>
-            <small style="color:#a7f3d0;">✓ Bebas Banjir BKT & Akses Ambulans Prima</small>
+            <small style="color:#a7f3d0;">✓ Akses Ambulans & Transportasi Prima</small>
           </div>
         `);
         state.mapLayers.optimalGroup.addLayer(bestMarker);

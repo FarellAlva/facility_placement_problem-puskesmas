@@ -1423,52 +1423,6 @@
   ],
   "forbidden_zones": [
     {
-      "name": "Badan Air Banjir Kanal Timur (BKT) & Tanggul",
-      "type": "sungai",
-      "polygon": [
-        [
-          1030.0,
-          1600.0
-        ],
-        [
-          1140.0,
-          1600.0
-        ],
-        [
-          1110.0,
-          1200.0
-        ],
-        [
-          990.0,
-          800.0
-        ],
-        [
-          770.0,
-          350.0
-        ],
-        [
-          670.0,
-          0.0
-        ],
-        [
-          570.0,
-          0.0
-        ],
-        [
-          670.0,
-          350.0
-        ],
-        [
-          880.0,
-          800.0
-        ],
-        [
-          1000.0,
-          1200.0
-        ]
-      ]
-    },
-    {
       "name": "Danau Retensi Air Harapan Indah Club",
       "type": "danau",
       "polygon": [
