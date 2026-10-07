@@ -14,6 +14,7 @@
     mapData: null,
     activeAlgo: 'split_3', // 'split_3', 'ga', 'pso', 'aco'
     mode: 'max', // 'max' or 'min_valid'
+    curationMode: 'normal', // 'normal' | 'addPoint'
     weights: {
       populasi: 0.35,
       akses_jalan: 0.30,
@@ -147,7 +148,7 @@
 
   function loadMapData() {
     if (window.PRESET_MAPS && window.PRESET_MAPS['harapan_indah']) {
-      state.mapData = window.PRESET_MAPS['harapan_indah'];
+      state.mapData = JSON.parse(JSON.stringify(window.PRESET_MAPS['harapan_indah']));
     } else {
       console.warn('Harapan Indah map preset not found, using fallback.');
       state.mapData = {
@@ -160,6 +161,22 @@
         forbidden_zones: [],
         curated_zones: []
       };
+    }
+
+    // Check user custom curation in localStorage
+    try {
+      const saved = localStorage.getItem('puskesmas_harapan_indah_curation');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.houses && Array.isArray(parsed.houses) && parsed.houses.length > 0) {
+          state.mapData.houses = parsed.houses;
+        }
+        if (parsed.curated_zones && Array.isArray(parsed.curated_zones) && parsed.curated_zones.length > 0) {
+          state.mapData.curated_zones = parsed.curated_zones;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load localStorage curation:', e);
     }
 
     // Preserve baseline weight for mathematical calibration
@@ -230,10 +247,14 @@
     state.mapLayers.particlesGroup = L.layerGroup().addTo(state.leafletMap);
     state.mapLayers.inspectorGroup = L.layerGroup().addTo(state.leafletMap);
 
-    // Map Click Listener for Spatial Point Inspector
+    // Map Click Listener for Spatial Point Inspector or Adding Point
     state.leafletMap.on('click', function(e) {
       const coords = latLngToMeters(e.latlng.lat, e.latlng.lng);
-      inspectSpatialPoint(coords[0], coords[1], e.latlng);
+      if (state.curationMode === 'addPoint') {
+        handleAddHousePoint(coords[0], coords[1], e.latlng);
+      } else {
+        inspectSpatialPoint(coords[0], coords[1], e.latlng);
+      }
     });
 
     // Render Static Layers (Simulation Bounding Box, Rivers, Faskes, Landmarks, Density)
@@ -255,17 +276,17 @@
     const ne = metersToLatLng(BBOX.widthMeters, BBOX.heightMeters);
     const nw = metersToLatLng(0, BBOX.heightMeters);
 
-    // Bounding Box Rectangle
+    // Bounding Box Rectangle (Subtle Flat Border, Zero Glow)
     const simBox = L.rectangle([sw, ne], {
-      color: '#f97316',
-      weight: 2.5,
-      dashArray: '8, 6',
-      fillColor: '#f97316',
-      fillOpacity: 0.03
+      color: '#64748b',
+      weight: 1.2,
+      dashArray: '6, 6',
+      fillColor: '#334155',
+      fillOpacity: 0.02
     });
     state.mapLayers.boundaryGroup.addLayer(simBox);
 
-    // Top Header Badge Label on the Box
+    // Top Header Badge Label on the Box (Subtle Flat Badge)
     const labelMarker = L.marker(nw, {
       icon: L.divIcon({
         className: 'sim-box-badge-container',
@@ -285,9 +306,9 @@
         const isRiver = zone.type === 'sungai' || zone.type === 'danau';
         const poly = L.polygon(latlngs, {
           color: isRiver ? '#0284c7' : '#e11d48',
-          weight: 1.5,
-          fillColor: isRiver ? '#38bdf8' : '#fb7185',
-          fillOpacity: 0.35,
+          weight: 1.0,
+          fillColor: isRiver ? '#0284c7' : '#e11d48',
+          fillOpacity: 0.15,
           dashArray: '4, 4'
         });
 
@@ -309,14 +330,14 @@
         const latlng = metersToLatLng(comp.x, comp.y);
         const isWest = idx === 0;
 
-        // Coverage circle (800 meters)
+        // Coverage circle (800 meters - subtle outline)
         const coverageCircle = L.circle(latlng, {
           radius: 800,
           color: isWest ? '#3b82f6' : '#10b981',
-          weight: 1.5,
+          weight: 1.0,
           fillColor: isWest ? '#3b82f6' : '#10b981',
-          fillOpacity: 0.10,
-          dashArray: '6, 6'
+          fillOpacity: 0.05,
+          dashArray: '4, 4'
         });
         state.mapLayers.faskesGroup.addLayer(coverageCircle);
 
@@ -407,20 +428,37 @@
         }
 
         const circle = L.circleMarker(latlng, {
-          radius: Math.max(3, Math.min(6.5, 2.5 + w * 0.7)),
+          radius: Math.max(3.5, Math.min(7.0, 2.5 + w * 0.7)),
           fillColor: dotColor,
-          fillOpacity: 0.65,
+          fillOpacity: 0.70,
           color: '#ffffff',
-          weight: 0.8,
+          weight: 0.9,
           renderer: state.canvasRenderer
         });
 
         circle.bindPopup(`
-          <div style="font-size:0.75rem; line-height:1.4;">
-            <b style="color:${dotColor};">👥 Titik Pemukiman #${idx + 1}</b><br>
-            <span>Kategori: <b>${dotCategory}</b></span><br>
-            <span>Bobot Kepadatan: <b>${w.toFixed(2)}</b> / 6.0</span><br>
-            <span style="color:#94a3b8;">Koordinat: (${h.x.toFixed(0)}, ${h.y.toFixed(0)}) m</span>
+          <div style="font-size:0.75rem; line-height:1.4; min-width:185px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <b style="color:${dotColor};">👥 Titik #${idx + 1}</b>
+              <span style="font-size:0.65rem; color:#94a3b8;">(${h.x.toFixed(0)}, ${h.y.toFixed(0)}) m</span>
+            </div>
+            <div style="color:#cbd5e1; font-size:0.7rem; margin-bottom:6px;">
+              Kategori: <b>${dotCategory}</b>
+            </div>
+            <div style="background:#0b0f19; border:1px solid #1f2937; border-radius:2px; padding:6px; margin:6px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:0.68rem; margin-bottom:4px;">
+                <span style="color:#94a3b8;">Bobot Kepadatan:</span>
+                <b id="popVal_${idx}" style="color:var(--theme-primary); font-weight:700;">${w.toFixed(1)}</b>
+              </div>
+              <input type="range" min="1.0" max="6.0" step="0.1" value="${w}" 
+                style="width:100%; height:4px; margin:2px 0;" 
+                oninput="document.getElementById('popVal_${idx}').textContent = parseFloat(this.value).toFixed(1);" 
+                id="popSlider_${idx}">
+            </div>
+            <div style="display:flex; gap:6px; margin-top:6px;">
+              <button style="flex:1; padding:4px 6px; font-size:0.7rem; background:#f97316; color:white; border:none; border-radius:2px; cursor:pointer;" onclick="updateHouseWeight(${idx}, parseFloat(document.getElementById('popSlider_${idx}').value))">💾 Simpan</button>
+              <button style="padding:4px 6px; font-size:0.7rem; background:#ef4444; color:white; border:none; border-radius:2px; cursor:pointer;" onclick="removeHousePoint(${idx})">🗑️ Hapus</button>
+            </div>
           </div>
         `);
 
@@ -529,6 +567,7 @@
 
     renderDensityLayer();
     runOptimization();
+    saveCurationToLocalStorage();
 
     // Flash status badge
     const badge = document.getElementById('curationStatusBadge');
@@ -536,30 +575,172 @@
       badge.textContent = '✓ Diterapkan';
       badge.style.color = '#10b981';
       setTimeout(() => {
-        badge.textContent = '7 Klaster Wilayah';
+        badge.textContent = `${zones.length} Klaster Wilayah`;
         badge.style.color = '';
       }, 2500);
     }
   };
 
-  window.resetCurationToDefault = function() {
-    const zones = state.mapData.curated_zones || [];
-    zones.forEach(z => {
-      z.current_weight = z.default_weight;
-      const sliderEl = document.getElementById(`curSlider_${z.id}`);
-      if (sliderEl) sliderEl.value = z.default_weight;
-      onZoneSliderInput(z.id, z.default_weight);
-    });
+  function saveCurationToLocalStorage() {
+    try {
+      const payload = {
+        houses: state.mapData.houses,
+        curated_zones: state.mapData.curated_zones
+      };
+      localStorage.setItem('puskesmas_harapan_indah_curation', JSON.stringify(payload));
+    } catch (e) {
+      console.warn('Could not save to localStorage:', e);
+    }
+  }
 
-    // Reset base weight
+  window.toggleAddPointMode = function() {
+    state.curationMode = state.curationMode === 'addPoint' ? 'normal' : 'addPoint';
+    const isAdding = state.curationMode === 'addPoint';
+
+    const btn = document.getElementById('btnAddPointMode');
+    const icon = document.getElementById('addPointIcon');
+    const text = document.getElementById('addPointText');
+
+    if (btn) {
+      if (isAdding) {
+        btn.style.background = '#f97316';
+        btn.style.color = '#ffffff';
+        btn.style.borderColor = '#ea580c';
+        icon.textContent = '✖';
+        text.textContent = 'Klik Peta untuk Pasang';
+      } else {
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        icon.textContent = '➕';
+        text.textContent = 'Tambah Titik di Peta';
+      }
+    }
+
+    if (state.leafletMap) {
+      state.leafletMap.getContainer().style.cursor = isAdding ? 'crosshair' : '';
+    }
+  };
+
+  window.handleAddHousePoint = function(px, py, latlng) {
+    if (px < 0 || px > BBOX.widthMeters || py < 0 || py > BBOX.heightMeters) {
+      alert('Titik baru harus berada di dalam batas Kotak Simulasi Harapan Indah!');
+      return;
+    }
+
+    const newPoint = {
+      x: Math.round(px * 10) / 10,
+      y: Math.round(py * 10) / 10,
+      weight: 4.5,
+      base_weight: 4.5
+    };
+    state.mapData.houses.push(newPoint);
+    saveCurationToLocalStorage();
+    renderDensityLayer();
+    runOptimization();
+
+    // Status feedback
+    const badge = document.getElementById('curationStatusBadge');
+    if (badge) {
+      badge.textContent = `+ Titik #${state.mapData.houses.length}`;
+      badge.style.color = '#38bdf8';
+      setTimeout(() => {
+        badge.textContent = `${(state.mapData.curated_zones || []).length} Klaster Wilayah`;
+        badge.style.color = '';
+      }, 2500);
+    }
+  };
+
+  window.updateHouseWeight = function(idx, newWeight) {
+    if (state.mapData.houses && state.mapData.houses[idx]) {
+      state.mapData.houses[idx].weight = newWeight;
+      state.mapData.houses[idx].base_weight = newWeight;
+      saveCurationToLocalStorage();
+      renderDensityLayer();
+      runOptimization();
+      state.leafletMap.closePopup();
+    }
+  };
+
+  window.removeHousePoint = function(idx) {
+    if (state.mapData.houses && state.mapData.houses[idx]) {
+      state.mapData.houses.splice(idx, 1);
+      saveCurationToLocalStorage();
+      renderDensityLayer();
+      runOptimization();
+      state.leafletMap.closePopup();
+    }
+  };
+
+  window.exportCurationJSON = function() {
+    const exportData = {
+      title: "Kurasi Kepadatan Penduduk Kota Harapan Indah",
+      exportedAt: new Date().toISOString(),
+      dimensions: state.mapData.dimensions,
+      curated_zones: state.mapData.curated_zones,
+      houses: state.mapData.houses,
+      facilities: state.mapData.facilities,
+      competitors: state.mapData.competitors,
+      roads: state.mapData.roads,
+      forbidden_zones: state.mapData.forbidden_zones
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kurasi_harapan_indah_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  window.importCurationJSON = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (imported.houses && Array.isArray(imported.houses)) {
+          state.mapData.houses = imported.houses;
+        }
+        if (imported.curated_zones && Array.isArray(imported.curated_zones)) {
+          state.mapData.curated_zones = imported.curated_zones;
+        }
+        if (imported.facilities && Array.isArray(imported.facilities)) {
+          state.mapData.facilities = imported.facilities;
+        }
+        saveCurationToLocalStorage();
+        initCurationUI();
+        renderDensityLayer();
+        runOptimization();
+        alert('Data kurasi JSON berhasil dimuat dan diterapkan ke peta!');
+      } catch (err) {
+        alert('Gagal memuat berkas JSON: ' + err.message);
+      }
+      event.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  window.resetCurationToDefault = function() {
+    try {
+      localStorage.removeItem('puskesmas_harapan_indah_curation');
+    } catch (e) {}
+
+    // Reload baseline preset
+    if (window.PRESET_MAPS && window.PRESET_MAPS['harapan_indah']) {
+      state.mapData = JSON.parse(JSON.stringify(window.PRESET_MAPS['harapan_indah']));
+    }
+
     if (state.mapData.houses) {
       state.mapData.houses.forEach(h => {
-        if (h.base_weight !== undefined) {
-          h.weight = h.base_weight;
-        }
+        h.base_weight = h.weight;
       });
     }
 
+    initCurationUI();
     renderDensityLayer();
     runOptimization();
 
@@ -567,7 +748,7 @@
     if (badge) {
       badge.textContent = '↺ Default';
       setTimeout(() => {
-        badge.textContent = '7 Klaster Wilayah';
+        badge.textContent = `${(state.mapData.curated_zones || []).length} Klaster Wilayah`;
       }, 2000);
     }
   };
@@ -1109,11 +1290,11 @@
   }
 
   function updateKpisForPoint(pos, fit, road, d1, d2) {
-    elKpiCoords.innerHTML = `(${pos[0].toFixed(0)}, ${pos[1].toFixed(0)}) <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">m</span>`;
-    elKpiFitness.textContent = fit.toFixed(4);
-    elKpiRoadName.textContent = `${road.roadName} (${road.distance.toFixed(0)}m)`;
-    elKpiDistP1.innerHTML = `${d1.toLocaleString()} <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span>`;
-    elKpiDistP2.innerHTML = `${d2.toLocaleString()} <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span>`;
+    if (elKpiCoords) elKpiCoords.innerHTML = `(${pos[0].toFixed(0)}, ${pos[1].toFixed(0)}) <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">m</span>`;
+    if (elKpiFitness) elKpiFitness.textContent = fit.toFixed(4);
+    if (elKpiRoadName) elKpiRoadName.textContent = `${road.roadName} (${road.distance.toFixed(0)}m)`;
+    if (elKpiDistP1) elKpiDistP1.innerHTML = `${d1.toLocaleString()} <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span>`;
+    if (elKpiDistP2) elKpiDistP2.innerHTML = `${d2.toLocaleString()} <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span>`;
   }
 
   // ==========================================================================
@@ -1503,6 +1684,9 @@
 
     runOptimization();
   };
+
+  // Expose state globally for inspection and programmatic access
+  window.appState = state;
 
   // Launch on DOM ready
   window.addEventListener('DOMContentLoaded', init);

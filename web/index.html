@@ -43,56 +43,6 @@
   </header>
 
   <!-- ========================================================================
-       Analytics Metric Cards (KPI Bar - Flat)
-       ======================================================================== -->
-  <section class="analytics-bar">
-    <div class="kpi-card">
-      <div class="kpi-title">
-        <span>Rekomendasi Tapak Baru</span>
-        <span class="tag-badge orange">Optimal</span>
-      </div>
-      <div class="kpi-value" id="kpiCoords">(1480, 640) <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">m</span></div>
-      <div class="kpi-sub" id="kpiRoadName">Jl. Siliwangi / GrandLucky Corridor</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-title">
-        <span>Skor Fitness Global</span>
-        <span class="tag-badge emerald" id="kpiFitnessDelta">+18.4% vs Base</span>
-      </div>
-      <div class="kpi-value" id="kpiFitness">0.9412</div>
-      <div class="kpi-sub" id="kpiFeasibility">100% Sah (Bebas Banjir BKT)</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-title">
-        <span>Ke Puskesmas Ujung Menteng</span>
-        <span class="tag-badge blue">Faskes Barat</span>
-      </div>
-      <div class="kpi-value" id="kpiDistP1">1.145 <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span></div>
-      <div class="kpi-sub">Buffer Aman (&gt; 300m Bebas Kanibalisasi)</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-title">
-        <span>Ke Puskesmas Pejuang</span>
-        <span class="tag-badge emerald">Faskes Timur Laut</span>
-      </div>
-      <div class="kpi-value" id="kpiDistP2">1.074 <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">meter</span></div>
-      <div class="kpi-sub">Keseimbangan Jaringan Terpadu</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-title">
-        <span>Waktu Tanggap Ambulans</span>
-        <span class="tag-badge emerald">Grade A</span>
-      </div>
-      <div class="kpi-value" id="kpiResponseTime">3.4 <span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">menit</span></div>
-      <div class="kpi-sub">98.6% Pasien Terjangkau Cepat</div>
-    </div>
-  </section>
-
-  <!-- ========================================================================
        Main Application Container
        ======================================================================== -->
   <main class="main-container">
@@ -204,12 +154,28 @@
           <span>👥 Kurasi Kepadatan Penduduk</span>
           <span class="badge" id="curationStatusBadge">7 Klaster Wilayah</span>
         </div>
-        <p style="font-size:0.75rem; color:#9ca3af; margin-bottom:12px; line-height:1.4;">
-          Sesuaikan bobot kepadatan per zona berikut untuk merefleksikan jumlah KK/jiwa nyata di Harapan Indah:
+        <p style="font-size:0.75rem; color:#9ca3af; margin-bottom:8px; line-height:1.4;">
+          Ubah bobot klaster atau klik titik penduduk di peta untuk menyesuaikan kepadatan:
         </p>
+
+        <!-- Quick Interactive Tools -->
+        <div style="display:flex; gap:6px; margin-bottom:10px;">
+          <button class="btn-secondary" id="btnAddPointMode" style="flex:1; font-size:0.72rem; padding:5px 6px;" onclick="toggleAddPointMode()">
+            <span id="addPointIcon">➕</span> <span id="addPointText">Tambah Titik di Peta</span>
+          </button>
+          <button class="btn-secondary" style="font-size:0.72rem; padding:5px 8px;" title="Unduh data kurasi sebagai file JSON" onclick="exportCurationJSON()">
+            📥 Unduh
+          </button>
+          <button class="btn-secondary" style="font-size:0.72rem; padding:5px 8px;" title="Muat data kurasi dari file JSON" onclick="document.getElementById('importJsonInput').click()">
+            📤 Unggah
+          </button>
+          <input type="file" id="importJsonInput" accept=".json" style="display:none;" onchange="importCurationJSON(event)">
+        </div>
+
         <div class="curation-list" id="curationListContainer">
           <!-- Dynamically populated from curated_zones in map_data.js -->
         </div>
+
         <div style="display:flex; gap:8px; margin-top:10px;">
           <button class="btn-primary" style="flex:1; padding:7px 10px; font-size:0.78rem;" onclick="applyCurationChanges()">
             Terapkan Kurasi
