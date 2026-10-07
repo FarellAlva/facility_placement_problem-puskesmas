@@ -155,17 +155,13 @@ Dieksekusi 30 run independen dengan matched budget 2.000 evaluasi:
 ### 1. Dashboard Web Interaktif OpenStreetMap (Kota Harapan Indah)
 ![Web Dashboard Harapan Indah](results_harapan_indah/doc_web_dashboard.png)
 
-### 2. Animasi Simulasi Multi-Algoritma (Desktop Tkinter)
-![Animasi Simulasi Split 3 Algoritma](results/simulasi_maksimasi_split.gif)
-
-### 3. Tangkapan Layar Antarmuka Desktop Tkinter GUI
-| Tampilan Split 3-Algoritma | Layar Penuh Konvergensi |
-| :---: | :---: |
-| ![GUI Split HI](results_harapan_indah/tkinter_simulasi_split.png) | ![GUI Conv HI](results_harapan_indah/tkinter_simulasi_conv_full.png) |
-
-| Layar GA Harapan Indah | Layar PSO Harapan Indah | Layar ACO Harapan Indah |
+### 2. Komparasi Penempatan Multi-Fasilitas (1, 2, dan 3 Puskesmas)
+| 1 Puskesmas Rekomendasi | 2 Puskesmas Rekomendasi | 3 Puskesmas Rekomendasi |
 | :---: | :---: | :---: |
-| ![GUI GA HI](results_harapan_indah/tkinter_simulasi_ga_full.png) | ![GUI PSO HI](results_harapan_indah/tkinter_simulasi_pso_full.png) | ![GUI ACO HI](results_harapan_indah/tkinter_simulasi_aco_full.png) |
+| ![1 Puskesmas](results_harapan_indah/doc_clean_1_pcs.png) | ![2 Puskesmas](results_harapan_indah/doc_clean_2_pcs.png) | ![3 Puskesmas](results_harapan_indah/doc_clean_3_pcs.png) |
+
+### 3. Peta Spasial Komprehensif Kawasan Harapan Indah (Bekasi - Cakung)
+![Peta Komprehensif Harapan Indah](results_harapan_indah/doc_map_complete.png)
 
 ---
 
@@ -181,13 +177,7 @@ python run_web.py
 start web/index.html
 ```
 
-### 2. Menjalankan Desktop Tkinter GUI
-```bash
-python app_tkinter.py
-```
-*Gunakan menu combobox di panel kiri untuk beralih antara "Peta Kota Harapan Indah", "Peta Wilayah Studi Desa", dan "Peta Kecamatan Luas".*
-
-### 3. Menjalankan Eksperimen Batch & Analisis
+### 2. Menjalankan Eksperimen Batch & Analisis
 ```bash
 # Batch 30-Run Harapan Indah
 python run_batch.py --map maps/peta_harapan_indah.json --output-dir results_harapan_indah --runs 30 --budget 2000
@@ -197,7 +187,7 @@ python analyze.py --results-dir results_harapan_indah --map maps/peta_harapan_in
 python generate_docx_report.py
 ```
 
-### 4. Menjalankan Pengujian Otomatis
+### 3. Menjalankan Pengujian Otomatis
 ```bash
 pytest -v
 ```
